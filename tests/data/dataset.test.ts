@@ -88,4 +88,31 @@ describe("canonical Atlas dataset", () => {
       ).toBe(true);
     }
   });
+
+  it("publishes the verified GPT-5.6 Terra and Luna token rates", () => {
+    const terra = atlasDataset.models.find(({ id }) => id === "gpt-5-6-terra");
+    const luna = atlasDataset.models.find(({ id }) => id === "gpt-5-6-luna");
+
+    expect(terra?.pricing).toEqual({
+      inputPerMillionUsd: 2,
+      cachedInputPerMillionUsd: 0.2,
+      outputPerMillionUsd: 12,
+    });
+    expect(luna?.pricing).toEqual({
+      inputPerMillionUsd: 0.2,
+      cachedInputPerMillionUsd: 0.02,
+      outputPerMillionUsd: 1.2,
+    });
+  });
+
+  it("describes Claude Max with source-supported usage multiples", () => {
+    const max5x = atlasDataset.plans.find(({ id }) => id === "claude-max-5x");
+    const max20x = atlasDataset.plans.find(({ id }) => id === "claude-max-20x");
+
+    expect(max5x?.highlights).toContain("5x more usage than Pro");
+    expect(max20x?.highlights).toContain("20x more usage than Pro");
+    expect([...max5x!.highlights, ...max20x!.highlights].join(" ")).not.toMatch(
+      /capacity/i,
+    );
+  });
 });
