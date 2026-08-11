@@ -1,11 +1,44 @@
-export default function Page() {
+import { AtlasIntro } from "@/components/atlas/atlas-intro";
+import { ResearchConsole } from "@/components/atlas/research-console";
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
+import { atlasDataset } from "@/data/index";
+import { parseUrlState } from "@/lib/url-state";
+
+type PageSearchParams = Record<string, string | string[] | undefined>;
+
+function toUrlSearchParams(values: PageSearchParams): URLSearchParams {
+  const searchParams = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(values)) {
+    if (typeof value === "string") {
+      searchParams.set(key, value);
+    } else if (value?.[0]) {
+      searchParams.set(key, value[0]);
+    }
+  }
+
+  return searchParams;
+}
+
+export default async function Page({
+  searchParams = Promise.resolve({}),
+}: {
+  searchParams?: Promise<PageSearchParams>;
+}) {
+  const initialState = parseUrlState(
+    toUrlSearchParams(await searchParams),
+    atlasDataset,
+  );
+
   return (
-    <main>
-      <h1>AI Ecosystem Atlas</h1>
-      <p>
-        A public, evidence-backed comparison of AI product and developer
-        ecosystems.
-      </p>
-    </main>
+    <>
+      <SiteHeader />
+      <main>
+        <AtlasIntro dataset={atlasDataset} />
+        <ResearchConsole dataset={atlasDataset} initialState={initialState} />
+      </main>
+      <SiteFooter />
+    </>
   );
 }
