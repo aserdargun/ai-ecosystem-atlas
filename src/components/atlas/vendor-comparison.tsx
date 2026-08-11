@@ -84,16 +84,18 @@ function RecordList({
 }
 
 function ComparisonGroup({
+  id,
   title,
   rows,
 }: {
+  id: string;
   title: string;
   rows: readonly ComparisonRow[];
 }) {
   return (
-    <section className="comparison-group">
+    <section className="comparison-group" aria-labelledby={id}>
       <div className="comparison-group__heading">
-        <h3>{title}</h3>
+        <h3 id={id}>{title}</h3>
         <span>{rows.length}</span>
       </div>
       {rows.length > 0 ? (
@@ -114,8 +116,33 @@ function ComparisonGroup({
   );
 }
 
-function entryForVendor(row: ComparisonRow, vendorId: string) {
-  return row.leftVendorId === vendorId ? row.leftEntry : row.rightEntry;
+function CoverageBreakdown({
+  vendor,
+  summary,
+}: {
+  vendor: Vendor;
+  summary: ReturnType<typeof buildVendorSummary>;
+}) {
+  const accessibleSummary = availabilityValues
+    .map((availability) => (
+      `${availabilityLabels[availability]} ${summary.availability[availability]}`
+    ))
+    .join(", ");
+
+  return (
+    <div
+      className="coverage-breakdown"
+      role="cell"
+      aria-label={`${vendor.name}: ${accessibleSummary}`}
+    >
+      {availabilityValues.map((availability) => (
+        <span key={availability}>
+          <small>{availabilityLabels[availability]}</small>
+          <strong>{summary.availability[availability]}</strong>
+        </span>
+      ))}
+    </div>
+  );
 }
 
 export function VendorComparison({
@@ -139,18 +166,14 @@ export function VendorComparison({
 
     return [{
       category,
-      total: categoryRows.length,
-      left: categoryRows.filter((row) => {
-        const availability = entryForVendor(row, leftVendor.id).availability;
-        return availability === "available" || availability === "limited";
-      }).length,
-      right: categoryRows.filter((row) => {
-        const availability = entryForVendor(row, rightVendor.id).availability;
-        return availability === "available" || availability === "limited";
-      }).length,
+      left: buildVendorSummary(categoryRows, leftVendor.id),
+      right: buildVendorSummary(categoryRows, rightVendor.id),
     }];
   });
   const parityRows = rows.filter((row) => row.assessment.status === "strong-parity");
+  const partialParityRows = rows.filter(
+    (row) => row.assessment.status === "partial-parity",
+  );
   const differentApproachRows = rows.filter(
     (row) => row.assessment.status === "different-approach",
   );
@@ -179,7 +202,7 @@ export function VendorComparison({
       >
         <div className="vendor-section__heading">
           <h2 id="category-coverage-title">Category coverage</h2>
-          <p>Available or limited entries out of matching capabilities.</p>
+          <p>Five-state availability breakdown for matching capabilities.</p>
         </div>
         <div className="coverage-table" role="table" aria-label="Category coverage">
           <div className="coverage-table__head" role="row">
@@ -191,11 +214,11 @@ export function VendorComparison({
               {rightVendor.name}
             </span>
           </div>
-          {categoryCoverage.map(({ category, total, left, right }) => (
+          {categoryCoverage.map(({ category, left, right }) => (
             <div className="coverage-table__row" role="row" key={category.id}>
               <strong role="cell">{category.name}</strong>
-              <span role="cell">{left} of {total}</span>
-              <span role="cell">{right} of {total}</span>
+              <CoverageBreakdown vendor={leftVendor} summary={left} />
+              <CoverageBreakdown vendor={rightVendor} summary={right} />
             </div>
           ))}
         </div>
@@ -258,11 +281,25 @@ export function VendorComparison({
         </div>
         <div className="comparison-groups">
           <ComparisonGroup
+            id="strong-parity-title"
             title={comparisonStatusLabels["strong-parity"]}
             rows={parityRows}
           />
-          <ComparisonGroup title="Different approaches" rows={differentApproachRows} />
-          <ComparisonGroup title="Vendor-specific capabilities" rows={vendorSpecificRows} />
+          <ComparisonGroup
+            id="partial-parity-title"
+            title={comparisonStatusLabels["partial-parity"]}
+            rows={partialParityRows}
+          />
+          <ComparisonGroup
+            id="different-approaches-title"
+            title="Different approaches"
+            rows={differentApproachRows}
+          />
+          <ComparisonGroup
+            id="vendor-specific-title"
+            title="Vendor-specific capabilities"
+            rows={vendorSpecificRows}
+          />
         </div>
       </section>
     </article>

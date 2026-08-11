@@ -61,6 +61,41 @@ it("recomputes the summary from the active filtered rows", () => {
   expect(within(categoryCoverage).queryByText("Models")).not.toBeInTheDocument();
 });
 
+it("keeps every partial-parity assessment visible when that status is filtered", () => {
+  const partialParityRows = filterComparisonRows(allRows, {
+    ...defaultAtlasState,
+    statuses: ["partial-parity"],
+  });
+
+  renderComparison(partialParityRows);
+
+  expect(screen.getByText("5 filtered capabilities")).toBeVisible();
+  const partialParity = screen.getByRole("region", { name: "Partial parity" });
+  expect(within(partialParity).getAllByRole("listitem")).toHaveLength(5);
+  for (const row of partialParityRows) {
+    expect(within(partialParity).getByText(row.assessment.summary)).toBeVisible();
+  }
+});
+
+it("separates every factual availability state in category coverage", () => {
+  renderComparison();
+
+  const categoryCoverage = screen.getByRole("table", { name: "Category coverage" });
+  const models = within(categoryCoverage)
+    .getByRole("cell", { name: "Models" })
+    .closest('[role="row"]')!;
+  expect(
+    within(models).getByRole("cell", {
+      name: "Anthropic: Available 3, Limited 0, Not available 0, Not documented 1, Unknown 0",
+    }),
+  ).toBeVisible();
+  expect(
+    within(models).getByRole("cell", {
+      name: "OpenAI: Available 4, Limited 0, Not available 0, Not documented 0, Unknown 0",
+    }),
+  ).toBeVisible();
+});
+
 it("keeps model and plan evidence source-linked", () => {
   renderComparison();
 

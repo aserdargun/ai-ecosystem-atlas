@@ -168,6 +168,25 @@ it("switches the filtered dataset into the vendor comparison and round-trips the
   expect(replace).toHaveBeenLastCalledWith("/", { scroll: false });
 });
 
+it("summarizes only the rows matched by an active search in vendor view", async () => {
+  const user = userEvent.setup();
+  renderConsole();
+
+  await user.type(
+    screen.getByRole("searchbox", { name: /search capabilities/i }),
+    "lifecycle hooks",
+  );
+  await user.click(screen.getByRole("button", { name: "Vendor comparison" }));
+
+  expect(screen.getByRole("status")).toHaveTextContent("1 capability shown");
+  expect(screen.getByText("1 filtered capabilities")).toBeVisible();
+  expect(screen.getByText("Lifecycle hooks")).toBeVisible();
+  expect(replace).toHaveBeenLastCalledWith(
+    "/?q=lifecycle+hooks&view=vendors",
+    { scroll: false },
+  );
+});
+
 it("restores the vendor comparison from parsed initial URL state", () => {
   renderConsole({ ...defaultAtlasState, view: "vendors" });
 

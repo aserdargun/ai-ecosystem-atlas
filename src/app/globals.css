@@ -846,8 +846,37 @@ tbody th:first-child {
   font-variant-numeric: tabular-nums;
 }
 
-.coverage-table__row > span {
+.coverage-table__row > span,
+.coverage-breakdown {
   color: var(--atlas-ink-muted);
+}
+
+.coverage-breakdown {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.coverage-breakdown > span {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.coverage-breakdown small {
+  min-height: 26px;
+  font-size: 0.5rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.coverage-breakdown strong {
+  color: var(--atlas-ink);
+  font-family: var(--atlas-content-font);
+  font-size: 0.92rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .vendor-summary-columns,
@@ -953,7 +982,7 @@ tbody th:first-child {
 
 .comparison-groups {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1px;
   border: 1px solid var(--atlas-border);
   background: var(--atlas-border);
