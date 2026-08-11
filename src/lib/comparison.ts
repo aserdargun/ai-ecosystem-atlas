@@ -1,6 +1,7 @@
 import type {
   AtlasDataset,
   Availability,
+  Capability,
   Category,
   ComparisonAssessment,
   ComparisonStatus,
@@ -11,6 +12,12 @@ import { availabilityValues, comparisonStatusValues } from "@/data/schema";
 import { classifyFreshness, type Freshness } from "@/lib/freshness";
 import { matchesSearch } from "@/lib/search";
 import type { AtlasState } from "@/lib/url-state";
+
+export type Immutable<T> = T extends readonly (infer Item)[]
+  ? readonly Immutable<Item>[]
+  : T extends object
+    ? { readonly [Key in keyof T]: Immutable<T[Key]> }
+    : T;
 
 export type ComparisonEntry = Readonly<{
   id: VendorEntry["id"];
@@ -26,15 +33,15 @@ export type ComparisonEntry = Readonly<{
 }>;
 
 export type ComparisonRow = Readonly<{
-  category: Category;
-  capability: AtlasDataset["capabilities"][number];
+  category: Immutable<Category>;
+  capability: Immutable<Capability>;
   leftVendorId: string;
   rightVendorId: string;
   leftEntry: ComparisonEntry;
   rightEntry: ComparisonEntry;
-  assessment: ComparisonAssessment;
-  leftSources: readonly Source[];
-  rightSources: readonly Source[];
+  assessment: Immutable<ComparisonAssessment>;
+  leftSources: readonly Immutable<Source>[];
+  rightSources: readonly Immutable<Source>[];
   searchText: string;
 }>;
 
@@ -69,29 +76,65 @@ function undocumentedEntry(capabilityId: string, vendorId: string): ComparisonEn
   });
 }
 
+function immutableCategory(category: Category): Immutable<Category> {
+  return Object.freeze({ ...category });
+}
+
+function immutableCapability(capability: Capability): Immutable<Capability> {
+  return Object.freeze({
+    ...capability,
+    tags: Object.freeze([...capability.tags]),
+  }) as Immutable<Capability>;
+}
+
+function immutableEntry(entry: VendorEntry): ComparisonEntry {
+  return Object.freeze({
+    ...entry,
+    details: Object.freeze([...entry.details]),
+    productNames: Object.freeze([...entry.productNames]),
+    sourceIds: Object.freeze([...entry.sourceIds]),
+  });
+}
+
+function immutableAssessment(
+  assessment: ComparisonAssessment,
+): Immutable<ComparisonAssessment> {
+  return Object.freeze({
+    ...assessment,
+    vendorIds: Object.freeze([...assessment.vendorIds]),
+  }) as Immutable<ComparisonAssessment>;
+}
+
+function immutableSource(source: Source): Immutable<Source> {
+  return Object.freeze({ ...source });
+}
+
 function assessmentForPair(
   capabilityId: string,
   leftVendorId: string,
   rightVendorId: string,
   assessments: ReadonlyMap<string, ComparisonAssessment>,
-): ComparisonAssessment {
-  return (
-    assessments.get(`${capabilityId}:${vendorPairKey(leftVendorId, rightVendorId)}`) ??
-    {
-      capabilityId,
-      vendorIds: [leftVendorId, rightVendorId] as [string, string],
-      status: "insufficient-evidence" as const,
-      summary: "No reviewed comparison assessment is documented for this vendor pair.",
-    }
+): Immutable<ComparisonAssessment> {
+  const assessment = assessments.get(
+    `${capabilityId}:${vendorPairKey(leftVendorId, rightVendorId)}`,
   );
+
+  return assessment
+    ? immutableAssessment(assessment)
+    : immutableAssessment({
+        capabilityId,
+        vendorIds: [leftVendorId, rightVendorId],
+        status: "insufficient-evidence",
+        summary: "No reviewed comparison assessment is documented for this vendor pair.",
+      });
 }
 
 function rowSearchText(
-  category: Category,
-  capability: AtlasDataset["capabilities"][number],
+  category: Immutable<Category>,
+  capability: Immutable<Capability>,
   leftEntry: ComparisonEntry,
   rightEntry: ComparisonEntry,
-  assessment: ComparisonAssessment,
+  assessment: Immutable<ComparisonAssessment>,
   vendorText: string,
 ): string {
   return [
@@ -119,11 +162,15 @@ export function buildComparisonRows(
   leftVendorId: string,
   rightVendorId: string,
 ): readonly ComparisonRow[] {
-  const categories = new Map(dataset.categories.map((category) => [category.id, category]));
+  const categories = new Map(
+    dataset.categories.map((category) => [category.id, immutableCategory(category)]),
+  );
   const entries = new Map(
     dataset.vendorEntries.map((entry) => [entryKey(entry.capabilityId, entry.vendorId), entry]),
   );
-  const sources = new Map(dataset.sources.map((source) => [source.id, source]));
+  const sources = new Map(
+    dataset.sources.map((source) => [source.id, immutableSource(source)]),
+  );
   const assessments = new Map(
     dataset.assessments.map((assessment) => [
       `${assessment.capabilityId}:${vendorPairKey(...assessment.vendorIds)}`,
@@ -153,8 +200,14 @@ export function buildComparisonRows(
         throw new Error(`Capability ${capability.id} has no category.`);
       }
 
-      const leftEntry = entries.get(entryKey(capability.id, leftVendorId)) ?? undocumentedEntry(capability.id, leftVendorId);
-      const rightEntry = entries.get(entryKey(capability.id, rightVendorId)) ?? undocumentedEntry(capability.id, rightVendorId);
+      const rawLeftEntry = entries.get(entryKey(capability.id, leftVendorId));
+      const rawRightEntry = entries.get(entryKey(capability.id, rightVendorId));
+      const leftEntry = rawLeftEntry
+        ? immutableEntry(rawLeftEntry)
+        : undocumentedEntry(capability.id, leftVendorId);
+      const rightEntry = rawRightEntry
+        ? immutableEntry(rawRightEntry)
+        : undocumentedEntry(capability.id, rightVendorId);
       const assessment = assessmentForPair(capability.id, leftVendorId, rightVendorId, assessments);
       const leftSources = Object.freeze(
         leftEntry.sourceIds.flatMap((sourceId) => {
@@ -171,7 +224,7 @@ export function buildComparisonRows(
 
       return Object.freeze({
         category,
-        capability,
+        capability: immutableCapability(capability),
         leftVendorId,
         rightVendorId,
         leftEntry,

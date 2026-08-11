@@ -96,13 +96,15 @@ function canonicalValues<T extends string>(values: readonly T[], allowed: readon
 
 export function serializeUrlState(state: AtlasState): URLSearchParams {
   const searchParams = new URLSearchParams();
+  const query = state.query.slice(0, 120);
 
-  if (state.query) searchParams.set("q", state.query);
+  if (query) searchParams.set("q", query);
   if (state.categoryId) searchParams.set("category", state.categoryId);
-  if (state.leftVendorId !== defaultAtlasState.leftVendorId) {
+  if (
+    state.leftVendorId !== defaultAtlasState.leftVendorId ||
+    state.rightVendorId !== defaultAtlasState.rightVendorId
+  ) {
     searchParams.set("left", state.leftVendorId);
-  }
-  if (state.rightVendorId !== defaultAtlasState.rightVendorId) {
     searchParams.set("right", state.rightVendorId);
   }
 

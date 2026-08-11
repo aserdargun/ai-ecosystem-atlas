@@ -79,4 +79,29 @@ describe("comparison selectors", () => {
     expect(summary.availability.available).toBeGreaterThan(0);
     expect(summary.statuses["different-approach"]).toBeGreaterThan(0);
   });
+
+  it("prevents nested row changes from corrupting the source dataset", () => {
+    const dataset = structuredClone(atlasDataset);
+    const row = buildComparisonRows(dataset, "anthropic", "openai")[0];
+    const capability = dataset.capabilities[0];
+    const category = dataset.categories.find(
+      (item) => item.id === capability.categoryId,
+    )!;
+    const entry = dataset.vendorEntries.find(
+      (item) =>
+        item.capabilityId === capability.id && item.vendorId === "anthropic",
+    )!;
+    const assessment = dataset.assessments.find(
+      (item) => item.capabilityId === capability.id,
+    )!;
+
+    expect(Reflect.set(row.category, "description", "corrupted")).toBe(false);
+    expect(Reflect.set(row.capability.tags, 0, "corrupted")).toBe(false);
+    expect(Reflect.set(row.leftEntry, "summary", "corrupted")).toBe(false);
+    expect(Reflect.set(row.assessment, "summary", "corrupted")).toBe(false);
+    expect(category.description).not.toBe("corrupted");
+    expect(capability.tags[0]).not.toBe("corrupted");
+    expect(entry.summary).not.toBe("corrupted");
+    expect(assessment.summary).not.toBe("corrupted");
+  });
 });

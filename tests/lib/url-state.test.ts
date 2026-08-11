@@ -59,4 +59,36 @@ describe("URL state", () => {
     );
     expect(serializeUrlState(defaultAtlasState).toString()).toBe("");
   });
+
+  it("round-trips a third-vendor pair by serializing both vendor keys", () => {
+    const datasetWithGoogle = {
+      ...atlasDataset,
+      vendors: [
+        ...atlasDataset.vendors,
+        {
+          ...atlasDataset.vendors[0],
+          id: "google",
+          name: "Google",
+          shortName: "Gemini",
+          ecosystemName: "Gemini ecosystem",
+        },
+      ],
+    };
+    const state = {
+      ...defaultAtlasState,
+      leftVendorId: "google",
+      rightVendorId: "openai",
+    };
+
+    const serialized = serializeUrlState(state);
+
+    expect(serialized.toString()).toBe("left=google&right=openai");
+    expect(parseUrlState(serialized, datasetWithGoogle)).toEqual(state);
+  });
+
+  it("caps an oversized query when serializing state", () => {
+    expect(
+      serializeUrlState({ ...defaultAtlasState, query: "q".repeat(121) }).get("q"),
+    ).toBe("q".repeat(120));
+  });
 });
