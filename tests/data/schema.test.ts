@@ -178,6 +178,13 @@ describe("parseAtlasDataset", () => {
     expect(() => parseAtlasDataset(dataset, today)).toThrow(/future/i);
   });
 
+  it("rejects a calendar-invalid ISO verification date", () => {
+    const dataset = createValidFixture();
+    dataset.vendorEntries[0].verifiedAt = "2026-02-30";
+
+    expect(() => parseAtlasDataset(dataset, today)).toThrow(/valid calendar date/i);
+  });
+
   it("rejects the required categories when their display order drifts", () => {
     const dataset = createValidFixture();
     const firstCategory = dataset.categories[0];
