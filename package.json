@@ -1,7 +1,21 @@
 {
   "name": "ai-ecosystem-atlas",
-  "private": true,
+  "description": "An evidence-backed research console for comparing AI product and developer ecosystems.",
+  "keywords": [
+    "ai",
+    "anthropic",
+    "chatgpt",
+    "claude",
+    "comparison",
+    "openai",
+    "research"
+  ],
+  "private": false,
   "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "packageManager": "npm@10.9.8",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
