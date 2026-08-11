@@ -4,9 +4,12 @@ export function SiteHeader() {
       <div className="site-header__inner">
         <a className="site-brand" href="#top" aria-label="AI Ecosystem Atlas home">
           <span className="site-brand__mark" aria-hidden="true">
-            AE
+            +
           </span>
-          <span>AI Ecosystem Atlas</span>
+          <span className="site-brand__copy">
+            <strong>AI Ecosystem Atlas</strong>
+            <small>Research Console</small>
+          </span>
         </a>
         <nav aria-label="Primary navigation">
           <a href="#methodology">Methodology</a>
@@ -16,7 +19,7 @@ export function SiteHeader() {
             target="_blank"
             rel="noreferrer"
           >
-            GitHub
+            <span className="github-link__prefix">View on </span>GitHub ↗
           </a>
         </nav>
       </div>

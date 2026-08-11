@@ -185,37 +185,39 @@ export function ResearchConsole({
 
   return (
     <section className="research-console" aria-label="Research Console">
-      <FilterToolbar
-        query={query}
-        vendors={dataset.vendors}
-        leftVendorId={leftVendorId}
-        rightVendorId={rightVendorId}
-        resultCount={visibleRows.length}
-        isFiltered={isFiltered}
-        isPending={isPending || query !== deferredQuery}
-        onQueryChange={handleQueryChange}
-        onVendorChange={handleVendorChange}
-        onReset={resetFilters}
-      />
-      <div className="view-toggle" role="group" aria-label="Comparison view">
-        <button
-          type="button"
-          aria-pressed={view === "explorer"}
-          onClick={() =>
-            applyFilter((current) => ({ ...current, view: "explorer" }))
-          }
-        >
-          Explorer
-        </button>
-        <button
-          type="button"
-          aria-pressed={view === "vendors"}
-          onClick={() =>
-            applyFilter((current) => ({ ...current, view: "vendors" }))
-          }
-        >
-          Vendor comparison
-        </button>
+      <div className="console-toolbar">
+        <FilterToolbar
+          query={query}
+          vendors={dataset.vendors}
+          leftVendorId={leftVendorId}
+          rightVendorId={rightVendorId}
+          resultCount={visibleRows.length}
+          isFiltered={isFiltered}
+          isPending={isPending || query !== deferredQuery}
+          onQueryChange={handleQueryChange}
+          onVendorChange={handleVendorChange}
+          onReset={resetFilters}
+        />
+        <div className="view-toggle" role="group" aria-label="Comparison view">
+          <button
+            type="button"
+            aria-pressed={view === "explorer"}
+            onClick={() =>
+              applyFilter((current) => ({ ...current, view: "explorer" }))
+            }
+          >
+            Explorer
+          </button>
+          <button
+            type="button"
+            aria-pressed={view === "vendors"}
+            onClick={() =>
+              applyFilter((current) => ({ ...current, view: "vendors" }))
+            }
+          >
+            Vendor comparison
+          </button>
+        </div>
       </div>
       <div className="console-body">
         <MobileFilterSheet>
@@ -280,6 +282,9 @@ export function ResearchConsole({
           )}
         </div>
       </div>
+      <p className="continuation-note">
+        Next: methodology, freshness rules, and public update provenance
+      </p>
     </section>
   );
 }

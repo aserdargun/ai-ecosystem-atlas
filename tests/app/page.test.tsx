@@ -9,7 +9,9 @@ vi.mock("next/navigation", () => ({
 it("identifies the public application", async () => {
   render(await Page({ searchParams: Promise.resolve({}) }));
   expect(
-    screen.getByRole("heading", { name: "AI Ecosystem Atlas" }),
+    screen.getByRole("link", { name: "AI Ecosystem Atlas home" }),
   ).toBeInTheDocument();
-  expect(screen.getByText(/evidence-backed comparison/i)).toBeInTheDocument();
+  expect(
+    screen.getByRole("heading", { name: "Compare the ecosystems." }),
+  ).toBeInTheDocument();
 });

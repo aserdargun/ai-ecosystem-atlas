@@ -20,7 +20,7 @@ function EntryEvidence({
 }) {
   return (
     <section className="evidence-column" aria-labelledby={`${entry.id}-evidence-title`}>
-      <h3 id={`${entry.id}-evidence-title`}>{vendorName} evidence</h3>
+      <h2 id={`${entry.id}-evidence-title`}>{vendorName} evidence</h2>
       {entry.productNames.length > 0 ? (
         <p className="evidence-products">
           <strong>Products</strong> {entry.productNames.join(", ")}
@@ -82,7 +82,7 @@ export function EvidencePanel({ row }: { row: ComparisonRow }) {
         sources={row.rightSources}
       />
       <section className="evidence-assessment">
-        <h3>Assessment rationale</h3>
+        <h2>Assessment rationale</h2>
         <p>{row.assessment.summary}</p>
       </section>
     </div>

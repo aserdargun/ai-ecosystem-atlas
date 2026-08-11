@@ -6,8 +6,6 @@ export function MobileFilterSheet({ children }: { children: ReactNode }) {
       <summary>Categories &amp; filters</summary>
       <div
         className="mobile-filter-sheet__panel"
-        role="dialog"
-        aria-modal="false"
         aria-label="Atlas categories and filters"
       >
         {children}
