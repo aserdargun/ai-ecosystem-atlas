@@ -1,4 +1,6 @@
 import { atlasDataset } from "@/data";
+import { defineVendorEntry } from "@/data/vendor-entries";
+import { parseAtlasDataset } from "@/data/validation";
 
 const expectedCategoryIds = [
   "models",
@@ -20,6 +22,88 @@ const expectedCategoryIds = [
   "pricing-plans",
 ] as const;
 
+const expectedCapabilityIds = [
+  "frontier-model-lineup",
+  "context-window",
+  "multimodal-input",
+  "native-image-generation",
+  "conversational-chat",
+  "projects",
+  "delegated-knowledge-work",
+  "long-running-work",
+  "primary-coding-agent",
+  "terminal-cli",
+  "ide-integration",
+  "desktop-coding",
+  "browser-cloud-coding",
+  "custom-subagents",
+  "multi-agent-orchestration",
+  "hosted-agent-runtime",
+  "function-tool-calling",
+  "project-instruction-file",
+  "configuration-scopes",
+  "lifecycle-hooks",
+  "custom-agent-definitions",
+  "agent-skills",
+  "plugin-packaging",
+  "plugin-distribution",
+  "mcp-client",
+  "remote-connectors",
+  "local-connectors",
+  "chat-memory",
+  "project-memory",
+  "coding-auto-memory",
+  "cross-provider-import",
+  "file-analysis",
+  "document-generation",
+  "interactive-artifacts",
+  "sandboxed-code-execution",
+  "web-search",
+  "deep-research",
+  "source-citations",
+  "web-fetch",
+  "computer-use-product",
+  "computer-use-api",
+  "browser-control",
+  "voice-mode",
+  "local-execution",
+  "managed-cloud-environments",
+  "worktree-isolation",
+  "execution-sandbox",
+  "scheduled-tasks",
+  "background-continuation",
+  "event-driven-automation",
+  "permission-modes",
+  "fine-grained-permission-rules",
+  "full-autonomy-mode",
+  "enterprise-policy",
+  "core-model-api",
+  "agent-sdk",
+  "built-in-api-tools",
+  "api-mcp",
+  "team-enterprise-plans",
+  "sso-scim",
+  "audit-logs",
+  "data-retention-controls",
+  "consumer-plans",
+  "business-plans",
+  "enterprise-pricing",
+  "api-token-pricing",
+] as const;
+
+const officialSourceHosts = new Set([
+  "docs.anthropic.com",
+  "support.anthropic.com",
+  "www.anthropic.com",
+  "claude.com",
+  "platform.claude.com",
+  "developers.openai.com",
+  "platform.openai.com",
+  "help.openai.com",
+  "openai.com",
+  "chatgpt.com",
+]);
+
 describe("canonical Atlas dataset", () => {
   it("ships the complete two-vendor seed with evidence for every comparison", () => {
     expect(atlasDataset.vendors.map(({ id }) => id)).toEqual([
@@ -30,7 +114,9 @@ describe("canonical Atlas dataset", () => {
       expectedCategoryIds,
     );
     expect(atlasDataset.categories).toHaveLength(17);
-    expect(atlasDataset.capabilities).toHaveLength(66);
+    expect(atlasDataset.capabilities.map(({ id }) => id)).toEqual(
+      expectedCapabilityIds,
+    );
     expect(
       new Set(atlasDataset.capabilities.map((item) => item.categoryId)).size,
     ).toBe(17);
@@ -69,12 +155,23 @@ describe("canonical Atlas dataset", () => {
       ),
     ).toBe(true);
     expect(
+      atlasDataset.sources.every((source) =>
+        officialSourceHosts.has(new URL(source.url).hostname),
+      ),
+    ).toBe(true);
+    expect(
       atlasDataset.vendorEntries.every((entry) => entry.sourceIds.length > 0),
     ).toBe(true);
     expect(
       atlasDataset.vendorEntries.every(
         (entry) => entry.verifiedAt === "2026-08-11",
       ),
+    ).toBe(true);
+    expect(
+      atlasDataset.models.every((model) => model.verifiedAt === "2026-08-11"),
+    ).toBe(true);
+    expect(
+      atlasDataset.plans.every((plan) => plan.verifiedAt === "2026-08-11"),
     ).toBe(true);
 
     for (const vendorId of ["anthropic", "openai"]) {
@@ -87,6 +184,43 @@ describe("canonical Atlas dataset", () => {
         `plan coverage for ${vendorId}`,
       ).toBe(true);
     }
+  });
+
+  it("accepts a third-vendor fact through the same normalized entry contract", () => {
+    const googleEntry = defineVendorEntry({
+      id: "google-frontier-model-lineup",
+      capabilityId: "frontier-model-lineup",
+      vendorId: "google",
+      title: "Current Gemini models",
+      summary: "A normalized third-vendor entry used to exercise the authoring contract.",
+      details: [],
+      productNames: ["Gemini"],
+      availability: "available",
+      sourceIds: ["openai-models"],
+      verifiedAt: "2026-08-11",
+    });
+    const extended = parseAtlasDataset(
+      {
+        ...atlasDataset,
+        vendors: [
+          ...atlasDataset.vendors,
+          {
+            id: "google",
+            name: "Google",
+            shortName: "Gemini",
+            ecosystemName: "Gemini ecosystem",
+            description: "A third ecosystem fixture.",
+            homepageUrl: "https://www.google.com/",
+            accent: "#4285f4",
+          },
+        ],
+        vendorEntries: [...atlasDataset.vendorEntries, googleEntry],
+      },
+      new Date("2026-08-11T12:00:00Z"),
+    );
+
+    expect(extended.vendorEntries.at(-1)).toEqual(googleEntry);
+    expect(extended.vendorEntries).toHaveLength(133);
   });
 
   it("publishes the verified GPT-5.6 Terra and Luna token rates", () => {

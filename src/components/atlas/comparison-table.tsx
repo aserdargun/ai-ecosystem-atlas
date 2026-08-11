@@ -45,7 +45,10 @@ export function ComparisonTable({
         ) : null}
       </div>
       <div className="table-scroll">
-        <table aria-label={`${leftVendor.name} and ${rightVendor.name} ecosystem comparison`}>
+        <table
+          className="comparison-table"
+          aria-label={`${leftVendor.name} and ${rightVendor.name} ecosystem comparison`}
+        >
         <caption>
           Evidence-backed capability comparison between {leftVendor.name} and{" "}
           {rightVendor.name}

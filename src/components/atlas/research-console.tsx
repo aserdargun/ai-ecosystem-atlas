@@ -154,6 +154,14 @@ export function ResearchConsole({
     }
   }
 
+  function swapVendors() {
+    applyFilter((current) => ({
+      ...current,
+      leftVendorId: current.rightVendorId,
+      rightVendorId: current.leftVendorId,
+    }));
+  }
+
   function resetFilters() {
     commitState({
       ...copyAtlasState(defaultAtlasState),
@@ -196,6 +204,7 @@ export function ResearchConsole({
           isPending={isPending || query !== deferredQuery}
           onQueryChange={handleQueryChange}
           onVendorChange={handleVendorChange}
+          onSwapVendors={swapVendors}
           onReset={resetFilters}
         />
         <div className="view-toggle" role="group" aria-label="Comparison view">

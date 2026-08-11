@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type {
   Availability,
   ComparisonStatus,
@@ -21,6 +22,7 @@ type PrimaryToolbarProps = {
   isPending: boolean;
   onQueryChange: (query: string) => void;
   onVendorChange: (side: "left" | "right", vendorId: string) => void;
+  onSwapVendors: () => void;
   onReset: () => void;
 };
 
@@ -34,8 +36,12 @@ export function FilterToolbar({
   isPending,
   onQueryChange,
   onVendorChange,
+  onSwapVendors,
   onReset,
 }: PrimaryToolbarProps) {
+  const leftVendor = vendors.find(({ id }) => id === leftVendorId);
+  const rightVendor = vendors.find(({ id }) => id === rightVendorId);
+
   return (
     <div className="filter-toolbar" id="filter-toolbar" aria-busy={isPending}>
       <label className="search-control">
@@ -52,6 +58,7 @@ export function FilterToolbar({
           <span>Left vendor</span>
           <select
             value={leftVendorId}
+            style={{ "--vendor-color": leftVendor?.accent } as CSSProperties}
             onChange={(event) => onVendorChange("left", event.currentTarget.value)}
           >
             {vendors
@@ -63,13 +70,20 @@ export function FilterToolbar({
               ))}
           </select>
         </label>
-        <span className="vendor-controls__divider" aria-hidden="true">
-          vs
-        </span>
+        <button
+          className="vendor-controls__swap"
+          type="button"
+          aria-label="Swap vendors"
+          title="Swap left and right vendors"
+          onClick={onSwapVendors}
+        >
+          <span aria-hidden="true">⇄</span>
+        </button>
         <label>
           <span>Right vendor</span>
           <select
             value={rightVendorId}
+            style={{ "--vendor-color": rightVendor?.accent } as CSSProperties}
             onChange={(event) => onVendorChange("right", event.currentTarget.value)}
           >
             {vendors

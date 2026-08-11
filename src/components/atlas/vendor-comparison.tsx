@@ -180,6 +180,9 @@ export function VendorComparison({
   const vendorSpecificRows = rows.filter(
     (row) => row.assessment.status === "vendor-specific",
   );
+  const insufficientEvidenceRows = rows.filter(
+    (row) => row.assessment.status === "insufficient-evidence",
+  );
 
   return (
     <article className="vendor-comparison" aria-labelledby="vendor-comparison-title">
@@ -300,6 +303,13 @@ export function VendorComparison({
             title="Vendor-specific capabilities"
             rows={vendorSpecificRows}
           />
+          {insufficientEvidenceRows.length > 0 ? (
+            <ComparisonGroup
+              id="insufficient-evidence-title"
+              title={comparisonStatusLabels["insufficient-evidence"]}
+              rows={insufficientEvidenceRows}
+            />
+          ) : null}
         </div>
       </section>
     </article>

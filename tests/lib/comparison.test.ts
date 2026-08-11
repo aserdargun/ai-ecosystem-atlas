@@ -53,6 +53,22 @@ describe("comparison selectors", () => {
     expect(result.map((row) => row.capability.id)).toEqual(["coding-auto-memory"]);
   });
 
+  it.each([
+    ["GPT-5.6 Sol", "models"],
+    ["Claude Fable 5", "models"],
+    ["ChatGPT Pro", "pricing-plans"],
+  ])("scopes catalog query %s to its relevant category", (query, categoryId) => {
+    const rows = buildComparisonRows(atlasDataset, "anthropic", "openai");
+    const result = filterComparisonRows(rows, {
+      ...defaultAtlasState,
+      query,
+    });
+
+    expect(result).toHaveLength(4);
+    expect(result.every((row) => row.category.id === categoryId)).toBe(true);
+    expect(result).not.toHaveLength(66);
+  });
+
   it("counts each category against all other active filters", () => {
     const rows = buildComparisonRows(atlasDataset, "anthropic", "openai");
     const state = {
@@ -67,7 +83,7 @@ describe("comparison selectors", () => {
       ),
     ).toMatchObject({
       "memory-context": 4,
-      customization: 4,
+      customization: 1,
     });
   });
 

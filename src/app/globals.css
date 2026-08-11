@@ -331,23 +331,22 @@ a {
   font-size: 0.8125rem;
 }
 
-.vendor-controls label:first-child select {
-  border-top: 3px solid var(--atlas-anthropic);
+.vendor-controls select {
+  border-top: 3px solid var(--vendor-color, var(--atlas-border-strong));
 }
 
-.vendor-controls label:last-child select {
-  border-top: 3px solid var(--atlas-openai);
-}
-
-.vendor-controls__divider {
+.vendor-controls__swap {
   display: grid;
   width: 27px;
   height: 39px;
+  padding: 0;
   place-items: center;
+  border: 1px solid var(--atlas-border-strong);
+  border-radius: var(--atlas-radius-sm);
+  background: #f4efe8;
   color: var(--atlas-ink-muted);
-  font-size: 0.65rem;
+  font-size: 1rem;
   font-weight: 750;
-  text-transform: uppercase;
 }
 
 .result-actions {
@@ -571,7 +570,7 @@ a {
   background: var(--atlas-surface);
 }
 
-table {
+.comparison-table {
   width: 100%;
   min-width: 1160px;
   border-collapse: separate;
@@ -579,7 +578,7 @@ table {
   table-layout: fixed;
 }
 
-caption {
+.comparison-table caption {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -589,7 +588,7 @@ caption {
   white-space: nowrap;
 }
 
-thead th {
+.comparison-table thead th {
   position: sticky;
   z-index: 10;
   top: 0;
@@ -605,24 +604,24 @@ thead th {
   text-transform: uppercase;
 }
 
-thead th:first-child {
+.comparison-table thead th:first-child {
   border-left: 0;
 }
 
-thead th:nth-child(1) {
+.comparison-table thead th:nth-child(1) {
   width: 220px;
 }
 
-thead th:nth-child(2),
-thead th:nth-child(3) {
+.comparison-table thead th:nth-child(2),
+.comparison-table thead th:nth-child(3) {
   width: 250px;
 }
 
-thead th:nth-child(4) {
+.comparison-table thead th:nth-child(4) {
   width: 240px;
 }
 
-thead th:nth-child(5) {
+.comparison-table thead th:nth-child(5) {
   width: 198px;
 }
 
@@ -648,15 +647,15 @@ thead th:nth-child(5) {
   text-transform: none;
 }
 
-tbody th,
-tbody td {
+.comparison-table tbody th,
+.comparison-table tbody td {
   padding: 11px 12px;
   border-bottom: 1px solid var(--atlas-border);
   border-left: 1px solid #e5e0d7;
   vertical-align: top;
 }
 
-tbody th:first-child {
+.comparison-table tbody th:first-child {
   border-left: 0;
 }
 
@@ -1424,7 +1423,7 @@ tbody th:first-child {
     grid-column: 1 / -1;
   }
 
-  table {
+  .comparison-table {
     min-width: 1040px;
   }
 
@@ -1436,7 +1435,7 @@ tbody th:first-child {
     display: none;
   }
 
-  thead th:nth-child(1) {
+  .comparison-table thead th:nth-child(1) {
     width: 190px;
   }
 

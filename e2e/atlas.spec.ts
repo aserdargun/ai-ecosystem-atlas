@@ -143,6 +143,34 @@ test("desktop: preserves the accepted first-viewport table anatomy", async ({
   ).toBeVisible();
 });
 
+test("desktop: comparison table rules do not style unrelated semantic tables", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+
+  const styles = await page.evaluate(() => {
+    const table = document.createElement("table");
+    table.setAttribute("aria-label", "Unrelated table");
+    table.innerHTML =
+      "<caption>Unrelated caption</caption><thead><tr><th>Label</th></tr></thead><tbody><tr><td>Value</td></tr></tbody>";
+    document.body.append(table);
+    const caption = table.querySelector("caption")!;
+    const header = table.querySelector("th")!;
+    return {
+      minWidth: getComputedStyle(table).minWidth,
+      captionPosition: getComputedStyle(caption).position,
+      headerPosition: getComputedStyle(header).position,
+    };
+  });
+
+  expect(styles).toEqual({
+    minWidth: "0px",
+    captionPosition: "static",
+    headerPosition: "static",
+  });
+});
+
 test("mobile: keeps the compact masthead actions on one line", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");

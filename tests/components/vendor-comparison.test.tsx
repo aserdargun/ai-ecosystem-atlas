@@ -77,6 +77,40 @@ it("keeps every partial-parity assessment visible when that status is filtered",
   }
 });
 
+it("renders matching insufficient-evidence assessments without an empty default group", () => {
+  const insufficientSummary =
+    "No reviewed comparison assessment is documented for this vendor pair.";
+  const insufficientRow = {
+    ...allRows[0],
+    assessment: {
+      capabilityId: allRows[0].capability.id,
+      vendorIds: [anthropic.id, openai.id] as [string, string],
+      status: "insufficient-evidence" as const,
+      summary: insufficientSummary,
+    },
+  };
+
+  const { rerender } = renderComparison();
+  expect(
+    screen.queryByRole("region", { name: "Insufficient evidence" }),
+  ).not.toBeInTheDocument();
+
+  rerender(
+    <VendorComparison
+      rows={[insufficientRow]}
+      leftVendor={anthropic}
+      rightVendor={openai}
+      categories={atlasDataset.categories}
+      models={atlasDataset.models}
+      plans={atlasDataset.plans}
+      sources={atlasDataset.sources}
+    />,
+  );
+
+  const group = screen.getByRole("region", { name: "Insufficient evidence" });
+  expect(within(group).getByText(insufficientSummary)).toBeVisible();
+});
+
 it("separates every factual availability state in category coverage", () => {
   renderComparison();
 

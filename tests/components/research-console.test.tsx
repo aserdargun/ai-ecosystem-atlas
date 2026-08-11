@@ -50,6 +50,27 @@ it("searches the real atlas and expands official evidence", async () => {
   ).toHaveAttribute("href", expect.stringMatching(/^https:\/\//));
 });
 
+it.each([
+  ["GPT-5.6 Sol", "Models"],
+  ["Claude Fable 5", "Models"],
+  ["ChatGPT Pro", "Pricing"],
+])("shows a bounded category slice for catalog query %s", async (query, category) => {
+  const user = userEvent.setup();
+  renderConsole();
+
+  await user.type(
+    screen.getByRole("searchbox", { name: /search capabilities/i }),
+    query,
+  );
+
+  expect(screen.getByRole("status")).toHaveTextContent("4 capabilities shown");
+  const resultRows = screen.getAllByRole("row").slice(1);
+  expect(resultRows).toHaveLength(4);
+  for (const row of resultRows) {
+    expect(within(row).getByText(category)).toBeVisible();
+  }
+});
+
 it("combines category and multi-select status filters with a live count", async () => {
   const user = userEvent.setup();
   renderConsole();
@@ -148,6 +169,50 @@ it("excludes and rejects duplicate vendor selections", () => {
   expect(leftVendor).toHaveValue("anthropic");
   expect(rightVendor).toHaveValue("openai");
   expect(replace).not.toHaveBeenCalled();
+});
+
+it("swaps vendors atomically in controls, table order, accents, and URL state", async () => {
+  const user = userEvent.setup();
+  renderConsole();
+
+  const leftVendor = screen.getByRole("combobox", { name: /left vendor/i });
+  const rightVendor = screen.getByRole("combobox", { name: /right vendor/i });
+  expect(leftVendor).toHaveValue("anthropic");
+  expect(rightVendor).toHaveValue("openai");
+  expect(leftVendor).toHaveStyle({ "--vendor-color": "#d97757" });
+  expect(rightVendor).toHaveStyle({ "--vendor-color": "#168c6b" });
+
+  await user.click(screen.getByRole("button", { name: "Swap vendors" }));
+
+  expect(leftVendor).toHaveValue("openai");
+  expect(rightVendor).toHaveValue("anthropic");
+  expect(leftVendor).toHaveStyle({ "--vendor-color": "#168c6b" });
+  expect(rightVendor).toHaveStyle({ "--vendor-color": "#d97757" });
+  const headers = screen.getAllByRole("columnheader");
+  expect(headers[1]).toHaveTextContent("OpenAI");
+  expect(headers[2]).toHaveTextContent("Anthropic");
+  expect(replace).toHaveBeenLastCalledWith(
+    "/?left=openai&right=anthropic",
+    { scroll: false },
+  );
+});
+
+it("renders a reversed pair from initial URL state", () => {
+  renderConsole({
+    ...defaultAtlasState,
+    leftVendorId: "openai",
+    rightVendorId: "anthropic",
+  });
+
+  expect(screen.getByRole("combobox", { name: /left vendor/i })).toHaveValue(
+    "openai",
+  );
+  expect(screen.getByRole("combobox", { name: /right vendor/i })).toHaveValue(
+    "anthropic",
+  );
+  expect(
+    screen.getByRole("table", { name: /openai and anthropic/i }),
+  ).toBeVisible();
 });
 
 it("switches the filtered dataset into the vendor comparison and round-trips the URL", async () => {

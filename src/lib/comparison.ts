@@ -10,7 +10,7 @@ import type {
 } from "@/data/schema";
 import { availabilityValues, comparisonStatusValues } from "@/data/schema";
 import { classifyFreshness, type Freshness } from "@/lib/freshness";
-import { matchesSearch } from "@/lib/search";
+import { matchesSearch, normalizeSearchText } from "@/lib/search";
 import type { AtlasState } from "@/lib/url-state";
 
 export type Immutable<T> = T extends readonly (infer Item)[]
@@ -43,6 +43,7 @@ export type ComparisonRow = Readonly<{
   leftSources: readonly Immutable<Source>[];
   rightSources: readonly Immutable<Source>[];
   searchText: string;
+  catalogExactQueries: readonly string[];
 }>;
 
 export type VendorSummary = Readonly<{
@@ -135,7 +136,8 @@ function rowSearchText(
   leftEntry: ComparisonEntry,
   rightEntry: ComparisonEntry,
   assessment: Immutable<ComparisonAssessment>,
-  vendorText: string,
+  vendorIdentityText: string,
+  catalogText: string,
 ): string {
   return [
     category.name,
@@ -153,7 +155,8 @@ function rowSearchText(
     ...rightEntry.details,
     ...rightEntry.productNames,
     assessment.summary,
-    vendorText,
+    vendorIdentityText,
+    catalogText,
   ].join(" ");
 }
 
@@ -177,21 +180,39 @@ export function buildComparisonRows(
       assessment,
     ]),
   );
-  const vendorText = dataset.vendors
-    .filter((vendor) => vendor.id === leftVendorId || vendor.id === rightVendorId)
+  const selectedVendorIds = new Set([leftVendorId, rightVendorId]);
+  const vendorIdentityText = dataset.vendors
+    .filter((vendor) => selectedVendorIds.has(vendor.id))
     .flatMap((vendor) => [
       vendor.name,
       vendor.shortName,
       vendor.ecosystemName,
       vendor.description,
-      ...dataset.models
-        .filter((model) => model.vendorId === vendor.id)
-        .flatMap((model) => [model.name, model.family, model.positioning]),
-      ...dataset.plans
-        .filter((plan) => plan.vendorId === vendor.id)
-        .flatMap((plan) => [plan.name, plan.audience, plan.priceDisplay, ...plan.highlights]),
     ])
     .join(" ");
+  const modelCatalogText = dataset.models
+    .filter((model) => selectedVendorIds.has(model.vendorId))
+    .flatMap((model) => [model.name, model.family, model.positioning])
+    .join(" ");
+  const modelCatalogQueries = Object.freeze(
+    dataset.models
+      .filter((model) => selectedVendorIds.has(model.vendorId))
+      .map((model) => normalizeSearchText(model.name)),
+  );
+  const planCatalogText = dataset.plans
+    .filter((plan) => selectedVendorIds.has(plan.vendorId))
+    .flatMap((plan) => [
+      plan.name,
+      plan.audience,
+      plan.priceDisplay,
+      ...plan.highlights,
+    ])
+    .join(" ");
+  const planCatalogQueries = Object.freeze(
+    dataset.plans
+      .filter((plan) => selectedVendorIds.has(plan.vendorId))
+      .map((plan) => normalizeSearchText(plan.name)),
+  );
 
   return Object.freeze(
     dataset.capabilities.map((capability) => {
@@ -232,7 +253,25 @@ export function buildComparisonRows(
         assessment,
         leftSources,
         rightSources,
-        searchText: rowSearchText(category, capability, leftEntry, rightEntry, assessment, vendorText),
+        catalogExactQueries:
+          category.id === "models"
+            ? modelCatalogQueries
+            : category.id === "pricing-plans"
+              ? planCatalogQueries
+              : Object.freeze([]),
+        searchText: rowSearchText(
+          category,
+          capability,
+          leftEntry,
+          rightEntry,
+          assessment,
+          vendorIdentityText,
+          category.id === "models"
+            ? modelCatalogText
+            : category.id === "pricing-plans"
+              ? planCatalogText
+              : "",
+        ),
       });
     }),
   );
@@ -256,8 +295,22 @@ export function filterComparisonRows(
   now: Date = new Date(),
 ): ComparisonRow[] {
   const result: ComparisonRow[] = [];
+  const normalizedQuery = normalizeSearchText(state.query);
+  const catalogCategoryIds = new Set<string>();
+
+  if (normalizedQuery) {
+    for (const row of rows) {
+      if (row.catalogExactQueries.includes(normalizedQuery)) {
+        catalogCategoryIds.add(row.category.id);
+      }
+    }
+  }
 
   for (const row of rows) {
+    if (
+      catalogCategoryIds.size > 0 &&
+      !catalogCategoryIds.has(row.category.id)
+    ) continue;
     if (state.categoryId !== null && row.category.id !== state.categoryId) continue;
     if (
       state.availability.length > 0 &&
