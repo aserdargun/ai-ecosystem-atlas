@@ -1,6 +1,12 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState, useTransition } from "react";
+import {
+  useDeferredValue,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { useRouter } from "next/navigation";
 import { CategoryRail } from "@/components/atlas/category-rail";
 import { ComparisonTable } from "@/components/atlas/comparison-table";
@@ -36,6 +42,15 @@ function toggleValue<Value extends string>(
     : [...values, value];
 }
 
+function copyAtlasState(state: Readonly<AtlasState>): AtlasState {
+  return {
+    ...state,
+    availability: [...state.availability],
+    statuses: [...state.statuses],
+    freshness: [...state.freshness],
+  };
+}
+
 export function ResearchConsole({
   dataset,
   initialState,
@@ -44,15 +59,19 @@ export function ResearchConsole({
   initialState: Readonly<AtlasState>;
 }) {
   const router = useRouter();
-  const [query, setQuery] = useState(initialState.query);
-  const [categoryId, setCategoryId] = useState(initialState.categoryId);
-  const [leftVendorId, setLeftVendorId] = useState(initialState.leftVendorId);
-  const [rightVendorId, setRightVendorId] = useState(initialState.rightVendorId);
-  const [availability, setAvailability] = useState(initialState.availability);
-  const [statuses, setStatuses] = useState(initialState.statuses);
-  const [freshness, setFreshness] = useState(initialState.freshness);
+  const [state, setState] = useState(() => copyAtlasState(initialState));
+  const latestState = useRef(state);
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const {
+    query,
+    categoryId,
+    leftVendorId,
+    rightVendorId,
+    availability,
+    statuses,
+    freshness,
+  } = state;
   const deferredQuery = useDeferredValue(query);
 
   const vendorById = useMemo(
@@ -81,21 +100,18 @@ export function ResearchConsole({
     () => buildCategoryCounts(allRows, filterState),
     [allRows, filterState],
   );
+  const allCategoryCount = useMemo(
+    () =>
+      Array.from(categoryCounts.values()).reduce(
+        (total, count) => total + count,
+        0,
+      ),
+    [categoryCounts],
+  );
   const categoryById = useMemo(
     () => new Map(dataset.categories.map((category) => [category.id, category])),
     [dataset.categories],
   );
-
-  const currentState: AtlasState = {
-    query,
-    categoryId,
-    leftVendorId,
-    rightVendorId,
-    availability: [...availability],
-    statuses: [...statuses],
-    freshness: [...freshness],
-    view: initialState.view,
-  };
 
   function writeUrl(state: AtlasState) {
     const params = serializeUrlState(state);
@@ -103,49 +119,41 @@ export function ResearchConsole({
     router.replace(suffix ? `/?${suffix}` : "/", { scroll: false });
   }
 
-  function applyFilter(update: Partial<AtlasState>) {
-    const nextState = { ...currentState, ...update };
-    startTransition(() => {
-      if ("categoryId" in update) setCategoryId(nextState.categoryId);
-      if ("leftVendorId" in update) setLeftVendorId(nextState.leftVendorId);
-      if ("rightVendorId" in update) setRightVendorId(nextState.rightVendorId);
-      if ("availability" in update) setAvailability(nextState.availability);
-      if ("statuses" in update) setStatuses(nextState.statuses);
-      if ("freshness" in update) setFreshness(nextState.freshness);
-      setExpandedRowId(null);
-      writeUrl(nextState);
-    });
+  function commitState(nextState: AtlasState, urgent = false) {
+    latestState.current = nextState;
+    setExpandedRowId(null);
+    writeUrl(nextState);
+
+    if (urgent) {
+      setState(nextState);
+      return;
+    }
+
+    startTransition(() => setState(nextState));
+  }
+
+  function applyFilter(update: (current: AtlasState) => AtlasState) {
+    commitState(update(latestState.current));
   }
 
   function handleQueryChange(nextQuery: string) {
     const limitedQuery = nextQuery.slice(0, 120);
-    setQuery(limitedQuery);
-    setExpandedRowId(null);
-    writeUrl({ ...currentState, query: limitedQuery });
+    commitState({ ...latestState.current, query: limitedQuery }, true);
   }
 
   function handleVendorChange(side: "left" | "right", vendorId: string) {
     if (!vendorById.has(vendorId)) return;
-    if (side === "left" && vendorId !== rightVendorId) {
-      applyFilter({ leftVendorId: vendorId });
+    const current = latestState.current;
+    if (side === "left" && vendorId !== current.rightVendorId) {
+      applyFilter((latest) => ({ ...latest, leftVendorId: vendorId }));
     }
-    if (side === "right" && vendorId !== leftVendorId) {
-      applyFilter({ rightVendorId: vendorId });
+    if (side === "right" && vendorId !== current.leftVendorId) {
+      applyFilter((latest) => ({ ...latest, rightVendorId: vendorId }));
     }
   }
 
   function resetFilters() {
-    startTransition(() => {
-      setQuery(defaultAtlasState.query);
-      setCategoryId(defaultAtlasState.categoryId);
-      setLeftVendorId(defaultAtlasState.leftVendorId);
-      setRightVendorId(defaultAtlasState.rightVendorId);
-      setAvailability([...defaultAtlasState.availability]);
-      setStatuses([...defaultAtlasState.statuses]);
-      setFreshness([...defaultAtlasState.freshness]);
-      setExpandedRowId(null);
-      writeUrl({ ...defaultAtlasState });
-    });
+    commitState(copyAtlasState(defaultAtlasState));
   }
 
   const leftVendor = vendorById.get(leftVendorId);
@@ -190,21 +198,32 @@ export function ResearchConsole({
             categories={dataset.categories}
             counts={categoryCounts}
             selectedCategoryId={categoryId}
-            totalCount={allRows.length}
-            onSelect={(value) => applyFilter({ categoryId: value })}
+            totalCount={allCategoryCount}
+            onSelect={(value) =>
+              applyFilter((current) => ({ ...current, categoryId: value }))
+            }
           />
           <FilterGroups
             availability={availability}
             statuses={statuses}
             freshness={freshness}
             onAvailabilityChange={(value: Availability) =>
-              applyFilter({ availability: toggleValue(availability, value) })
+              applyFilter((current) => ({
+                ...current,
+                availability: toggleValue(current.availability, value),
+              }))
             }
             onStatusChange={(value: ComparisonStatus) =>
-              applyFilter({ statuses: toggleValue(statuses, value) })
+              applyFilter((current) => ({
+                ...current,
+                statuses: toggleValue(current.statuses, value),
+              }))
             }
             onFreshnessChange={(value: Freshness) =>
-              applyFilter({ freshness: toggleValue(freshness, value) })
+              applyFilter((current) => ({
+                ...current,
+                freshness: toggleValue(current.freshness, value),
+              }))
             }
           />
         </MobileFilterSheet>

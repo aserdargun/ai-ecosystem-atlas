@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import { ResearchConsole } from "@/components/atlas/research-console";
@@ -71,6 +71,39 @@ it("combines category and multi-select status filters with a live count", async 
   await user.click(screen.getByRole("checkbox", { name: "Vendor-specific" }));
 
   expect(screen.getByRole("status")).toHaveTextContent("12 capabilities shown");
+});
+
+it("keeps the all-categories count aligned with noncategory filters", async () => {
+  const user = userEvent.setup();
+  renderConsole();
+
+  await user.click(screen.getByRole("checkbox", { name: "Vendor-specific" }));
+
+  expect(screen.getByRole("status")).toHaveTextContent("3 capabilities shown");
+  expect(
+    screen.getByRole("button", { name: /^All categories 3$/i }),
+  ).toBeVisible();
+});
+
+it("preserves back-to-back filter controls and their canonical URL parameters", () => {
+  renderConsole();
+
+  const limited = screen.getByRole("checkbox", { name: "Limited" });
+  const vendorSpecific = screen.getByRole("checkbox", {
+    name: "Vendor-specific",
+  });
+
+  act(() => {
+    limited.click();
+    vendorSpecific.click();
+  });
+
+  expect(limited).toBeChecked();
+  expect(vendorSpecific).toBeChecked();
+  expect(replace).toHaveBeenLastCalledWith(
+    "/?availability=limited&status=vendor-specific",
+    { scroll: false },
+  );
 });
 
 it("shows zero results and resets every active constraint", async () => {
