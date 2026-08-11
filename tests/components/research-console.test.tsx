@@ -15,9 +15,9 @@ beforeEach(() => {
   replace.mockClear();
 });
 
-function renderConsole() {
+function renderConsole(initialState = defaultAtlasState) {
   return render(
-    <ResearchConsole dataset={atlasDataset} initialState={defaultAtlasState} />,
+    <ResearchConsole dataset={atlasDataset} initialState={initialState} />,
   );
 }
 
@@ -148,4 +148,34 @@ it("excludes and rejects duplicate vendor selections", () => {
   expect(leftVendor).toHaveValue("anthropic");
   expect(rightVendor).toHaveValue("openai");
   expect(replace).not.toHaveBeenCalled();
+});
+
+it("switches the filtered dataset into the vendor comparison and round-trips the URL", async () => {
+  const user = userEvent.setup();
+  renderConsole();
+
+  await user.click(screen.getByRole("button", { name: "Vendor comparison" }));
+
+  expect(
+    screen.getByRole("heading", { name: /anthropic and openai vendor comparison/i }),
+  ).toBeVisible();
+  expect(screen.queryByRole("table", { name: /anthropic and openai/i })).not.toBeInTheDocument();
+  expect(replace).toHaveBeenLastCalledWith("/?view=vendors", { scroll: false });
+
+  await user.click(screen.getByRole("button", { name: "Explorer" }));
+
+  expect(screen.getByRole("table", { name: /anthropic and openai/i })).toBeVisible();
+  expect(replace).toHaveBeenLastCalledWith("/", { scroll: false });
+});
+
+it("restores the vendor comparison from parsed initial URL state", () => {
+  renderConsole({ ...defaultAtlasState, view: "vendors" });
+
+  expect(
+    screen.getByRole("heading", { name: /anthropic and openai vendor comparison/i }),
+  ).toBeVisible();
+  expect(screen.getByRole("button", { name: "Vendor comparison" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
 });

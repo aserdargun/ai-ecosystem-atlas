@@ -16,6 +16,7 @@ import {
   FilterToolbar,
 } from "@/components/atlas/filter-toolbar";
 import { MobileFilterSheet } from "@/components/atlas/mobile-filter-sheet";
+import { VendorComparison } from "@/components/atlas/vendor-comparison";
 import type {
   AtlasDataset,
   Availability,
@@ -71,6 +72,7 @@ export function ResearchConsole({
     availability,
     statuses,
     freshness,
+    view,
   } = state;
   const deferredQuery = useDeferredValue(query);
 
@@ -153,7 +155,10 @@ export function ResearchConsole({
   }
 
   function resetFilters() {
-    commitState(copyAtlasState(defaultAtlasState));
+    commitState({
+      ...copyAtlasState(defaultAtlasState),
+      view: latestState.current.view,
+    });
   }
 
   const leftVendor = vendorById.get(leftVendorId);
@@ -192,6 +197,26 @@ export function ResearchConsole({
         onVendorChange={handleVendorChange}
         onReset={resetFilters}
       />
+      <div className="view-toggle" role="group" aria-label="Comparison view">
+        <button
+          type="button"
+          aria-pressed={view === "explorer"}
+          onClick={() =>
+            applyFilter((current) => ({ ...current, view: "explorer" }))
+          }
+        >
+          Explorer
+        </button>
+        <button
+          type="button"
+          aria-pressed={view === "vendors"}
+          onClick={() =>
+            applyFilter((current) => ({ ...current, view: "vendors" }))
+          }
+        >
+          Vendor comparison
+        </button>
+      </div>
       <div className="console-body">
         <MobileFilterSheet>
           <CategoryRail
@@ -229,15 +254,27 @@ export function ResearchConsole({
         </MobileFilterSheet>
         <div className="comparison-surface">
           {visibleRows.length > 0 ? (
-            <ComparisonTable
-              rows={visibleRows}
-              leftVendor={leftVendor}
-              rightVendor={rightVendor}
-              expandedRowId={expandedRowId}
-              onToggleRow={(rowId) =>
-                setExpandedRowId((current) => (current === rowId ? null : rowId))
-              }
-            />
+            view === "explorer" ? (
+              <ComparisonTable
+                rows={visibleRows}
+                leftVendor={leftVendor}
+                rightVendor={rightVendor}
+                expandedRowId={expandedRowId}
+                onToggleRow={(rowId) =>
+                  setExpandedRowId((current) => (current === rowId ? null : rowId))
+                }
+              />
+            ) : (
+              <VendorComparison
+                rows={visibleRows}
+                leftVendor={leftVendor}
+                rightVendor={rightVendor}
+                categories={dataset.categories}
+                models={dataset.models}
+                plans={dataset.plans}
+                sources={dataset.sources}
+              />
+            )
           ) : (
             <EmptyState constraints={constraints} onReset={resetFilters} />
           )}
