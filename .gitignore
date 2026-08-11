@@ -1,0 +1,12 @@
+.superpowers/
+.next/
+node_modules/
+coverage/
+playwright-report/
+test-results/
+.env*
+!.env.example
+.DS_Store
+work/
+outputs/
+
