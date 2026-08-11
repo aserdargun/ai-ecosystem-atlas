@@ -99,7 +99,7 @@
 - `e2e/atlas.spec.ts` — browser workflow and responsive layout smoke tests.
 - `scripts/validate-data.ts` — CLI integrity check used in the update workflow.
 - `public/ai-ecosystem-atlas.png` — final verified 1440×900 screenshot.
-- `README.md` — public project, architecture, schema, workflow, and roadmap documentation.
+- `README.md` — public project, architecture, schema, workflow, and roadmap documentation, reviewed directly with every documented command executed.
 
 ---
 
@@ -624,55 +624,29 @@ git commit -m "feat: add vendor comparison view"
 - Create: `README.md`
 - Modify: `.gitignore`
 - Modify: `package.json`
-- Test: `tests/readme.test.ts`
 
 **Interfaces:**
 - Consumes: final scripts, record types, taxonomy, actual repository structure, and verified screenshot path.
 - Produces: a complete public README and metadata suitable for the GitHub repository.
 
-- [ ] **Step 1: Write the failing README contract test**
+- [ ] **Step 1: Write the polished README**
 
-```ts
-const readme = readFileSync("README.md", "utf8");
-for (const heading of [
-  "## Purpose",
-  "## Features",
-  "## Architecture",
-  "## Data schema",
-  "## Local development",
-  "## Updating the atlas",
-  "## Adding a vendor",
-  "## Source methodology",
-  "## Roadmap",
-]) expect(readme).toContain(heading);
-expect(readme).toContain("public/ai-ecosystem-atlas.png");
-expect(readme).toContain("verifiedAt");
-```
+Include `Purpose`, `Features`, `Architecture`, `Data schema`, `Local development`, `Updating the atlas`, `Adding a vendor`, `Source methodology`, and `Roadmap` sections plus badges for Next.js, TypeScript, and checks; a screenshot; the 17 categories; the canonical data flow; a complete `VendorEntry` example; exact install/dev/check/build commands; the eight-step update workflow from the specification; the files to edit for a new vendor; methodology limitations; repository tree; and roadmap. State explicitly that `verifiedAt` is the evidence-check date, not necessarily the product release date, and that the project does not declare a winner.
 
-- [ ] **Step 2: Run the README test and observe missing file failure**
-
-Run: `npm test -- tests/readme.test.ts`
-
-Expected: FAIL because `README.md` does not exist.
-
-- [ ] **Step 3: Write the polished README**
-
-Include the exact sections asserted above plus badges for Next.js, TypeScript, and checks; a screenshot; the 17 categories; the canonical data flow; a complete `VendorEntry` example; exact install/dev/check/build commands; the eight-step update workflow from the specification; the files to edit for a new vendor; methodology limitations; repository tree; and roadmap. State explicitly that `verifiedAt` is the evidence-check date, not necessarily the product release date, and that the project does not declare a winner.
-
-- [ ] **Step 4: Add public repository metadata**
+- [ ] **Step 2: Add public repository metadata**
 
 Add `description`, `keywords`, `homepage` only if a deployment URL exists, `private: false`, `engines.node: ">=22.0.0"`, and `packageManager: "npm@10.9.8"`. Do not add a license without a separate owner decision.
 
-- [ ] **Step 5: Verify README and update commands**
+- [ ] **Step 3: Review the README and execute every documented command**
 
-Run: `npm test -- tests/readme.test.ts && npm run validate:data && npm run check`
+Read the finished README top to bottom and verify that every required section, the 17-category list, complete `VendorEntry` example, repository tree, update steps, methodology limitation, screenshot path, and roadmap are present and accurate. Run every documented local-development and verification command in the order shown, including `npm ci`, `npm run dev` startup, `npm run validate:data`, `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build`. Check each Markdown link target and ensure the screenshot path resolves to the committed image after Task 8.
 
-Expected: README contract and all project checks pass.
+Expected: the prose is complete and internally consistent; every command exits successfully; every link is syntactically valid; the screenshot path is the exact final Task 8 path.
 
-- [ ] **Step 6: Commit documentation**
+- [ ] **Step 4: Commit documentation**
 
 ```bash
-git add README.md .gitignore package.json package-lock.json tests/readme.test.ts
+git add README.md .gitignore package.json package-lock.json
 git commit -m "docs: explain the public atlas workflow"
 ```
 
