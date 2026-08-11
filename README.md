@@ -116,6 +116,12 @@ Install the locked dependencies:
 npm ci
 ```
 
+Install the Playwright Chromium browser once on a new machine:
+
+```bash
+npx playwright install chromium
+```
+
 Start the local development server, then open `http://localhost:3000`:
 
 ```bash
@@ -129,14 +135,18 @@ npm run validate:data
 npm run lint
 npm run typecheck
 npm test
+npm run test:e2e
 npm run build
 ```
 
-Or run the same validation, lint, type, unit/component, and production-build sequence with one command:
+Run the validation, lint, type, unit/component, and production-build sequence with one command:
 
 ```bash
 npm run check
 ```
+
+`npm run check` intentionally excludes browser tests. Run `npm run test:e2e`
+separately when verifying rendered workflows or preparing a release.
 
 ## Updating the atlas
 
@@ -147,7 +157,8 @@ Every change follows the same public, reviewable workflow:
 3. Update or add the source record before referencing it.
 4. Update the canonical fact and set `verifiedAt` to the official-source check date.
 5. Add or update tests when schema or selector behavior changes.
-6. Run validation, tests, type checking, linting, and the production build.
+6. Run validation, tests (including `npm run test:e2e`), type checking, linting,
+   and the production build.
 7. Inspect the affected comparison and source expansion in the browser.
 8. Commit the data and evidence change and submit it for public review.
 
@@ -190,6 +201,8 @@ Important limitations:
 ```text
 .
 ├── docs/superpowers/          # Approved product specification and implementation plan
+├── e2e/
+│   └── atlas.spec.ts          # Chromium workflow, responsive, focus, and overflow coverage
 ├── scripts/
 │   └── validate-data.ts       # Deterministic dataset validation entry point
 ├── src/

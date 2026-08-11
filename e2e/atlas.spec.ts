@@ -24,11 +24,48 @@ for (const viewport of viewports) {
     }));
     expect(pageOverflow.scrollWidth).toBeLessThanOrEqual(pageOverflow.clientWidth);
 
-    const tableOverflow = await page.locator(".table-scroll").evaluate((element) => ({
+    const tableScroller = page.locator(".table-scroll");
+    const tableOverflow = await tableScroller.evaluate((element) => ({
       clientWidth: element.clientWidth,
       scrollWidth: element.scrollWidth,
     }));
-    expect(tableOverflow.scrollWidth).toBeGreaterThanOrEqual(tableOverflow.clientWidth);
+    if (viewport.name === "desktop") {
+      expect(tableOverflow.scrollWidth).toBeGreaterThanOrEqual(
+        tableOverflow.clientWidth,
+      );
+    } else {
+      expect(tableOverflow.scrollWidth).toBeGreaterThan(tableOverflow.clientWidth);
+      const horizontalPosition = await tableScroller.evaluate((element) => {
+        element.scrollLeft = element.scrollWidth - element.clientWidth;
+        return {
+          maxScrollLeft: element.scrollWidth - element.clientWidth,
+          scrollLeft: element.scrollLeft,
+        };
+      });
+      expect(horizontalPosition.scrollLeft).toBe(horizontalPosition.maxScrollLeft);
+
+      const verificationReachability = await page
+        .getByRole("columnheader", { name: /verification & sources/i })
+        .evaluate((header) => {
+          const scroller = header.closest<HTMLElement>(".table-scroll");
+          if (!scroller) return null;
+          const headerRect = header.getBoundingClientRect();
+          const scrollerRect = scroller.getBoundingClientRect();
+          return {
+            headerLeft: headerRect.left,
+            headerRight: headerRect.right,
+            scrollerLeft: scrollerRect.left,
+            scrollerRight: scrollerRect.right,
+          };
+        });
+      expect(verificationReachability).not.toBeNull();
+      expect(verificationReachability!.headerLeft).toBeGreaterThanOrEqual(
+        verificationReachability!.scrollerLeft - 1,
+      );
+      expect(verificationReachability!.headerRight).toBeLessThanOrEqual(
+        verificationReachability!.scrollerRight + 1,
+      );
+    }
 
     await page
       .getByRole("searchbox", { name: /search capabilities/i })
@@ -115,4 +152,51 @@ test("mobile: keeps the compact masthead actions on one line", async ({ page }) 
     (element) => element.getBoundingClientRect().height,
   );
   expect(headerHeight).toBeLessThanOrEqual(60);
+});
+
+test("desktop: reaches evidence through natural Tab order with visible focus", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+
+  const search = page.getByRole("searchbox", { name: /search capabilities/i });
+  await search.fill("lifecycle hooks");
+  await expect(search).toBeFocused();
+
+  let focusedEvidence: {
+    outlineStyle: string;
+    outlineWidth: string;
+    text: string;
+  } | null = null;
+
+  for (let index = 0; index < 45; index += 1) {
+    await page.keyboard.press("Tab");
+    const active = await page.evaluate(() => {
+      const element = document.activeElement;
+      if (!(element instanceof HTMLElement)) return null;
+      const style = getComputedStyle(element);
+      return {
+        outlineStyle: style.outlineStyle,
+        outlineWidth: style.outlineWidth,
+        text: element.innerText.trim(),
+      };
+    });
+    if (active?.text === "Show evidence for Lifecycle hooks") {
+      focusedEvidence = active;
+      break;
+    }
+  }
+
+  expect(focusedEvidence).not.toBeNull();
+  expect(focusedEvidence!.outlineStyle).not.toBe("none");
+  expect(focusedEvidence!.outlineWidth).not.toBe("0px");
+
+  await page.keyboard.press("Enter");
+  await expect(
+    page.getByRole("heading", { level: 2, name: "Anthropic evidence" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: /official source/i }).first(),
+  ).toHaveAttribute("href", /^https:\/\//);
 });

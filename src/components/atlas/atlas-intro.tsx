@@ -20,6 +20,8 @@ function displayDate(value: string): string {
 }
 
 export function AtlasIntro({ dataset }: { dataset: AtlasDataset }) {
+  const latestVerification = mostRecentDate(dataset);
+
   return (
     <section className="atlas-intro" id="methodology" aria-labelledby="atlas-title">
       <div className="atlas-intro__copy">
@@ -29,11 +31,29 @@ export function AtlasIntro({ dataset }: { dataset: AtlasDataset }) {
           Evidence-backed product and developer capabilities, verified against
           official sources.
         </p>
+        <dl className="atlas-coverage" aria-label="Atlas coverage statistics">
+          <div>
+            <dt>Capabilities</dt>
+            <dd>{dataset.capabilities.length}</dd>
+          </div>
+          <div>
+            <dt>Categories</dt>
+            <dd>{dataset.categories.length}</dd>
+          </div>
+          <div>
+            <dt>Official sources</dt>
+            <dd>{dataset.sources.length}</dd>
+          </div>
+          <div>
+            <dt>Latest verification</dt>
+            <dd>{displayDate(latestVerification)}</dd>
+          </div>
+        </dl>
       </div>
       <dl className="atlas-summary" aria-label="Atlas coverage summary">
         <div>
           <dt>Latest verification</dt>
-          <dd>{displayDate(mostRecentDate(dataset))}</dd>
+          <dd>{displayDate(latestVerification)}</dd>
         </div>
       </dl>
     </section>
