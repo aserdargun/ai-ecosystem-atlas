@@ -61,7 +61,7 @@ Canonical records
   -> pure selectors and indexes
   -> server-rendered page shell and serialized public dataset
   -> ResearchConsole client boundary
-  -> URL-synchronized search, filters, vendor pair, and expanded rows
+  -> URL-synchronized search, filters, vendor pair, and view
 ```
 
 This structure makes invalid source data fail early, keeps presentation logic independent of the seed vendors, and requires no backing data service. There is no account system, database, CMS, write API, scraper, analytics dependency, or remote-font dependency in v0.1.
