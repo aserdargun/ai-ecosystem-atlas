@@ -6,7 +6,7 @@
 
 **Architecture:** A Next.js App Router page loads Zod-validated canonical TypeScript records on the server and passes a minimal public dataset to one interactive `ResearchConsole` client boundary. Pure selectors derive comparison rows, counts, search matches, filters, freshness, and vendor summaries; URL query parameters make views shareable without a database or mutation API.
 
-**Tech Stack:** Next.js 16.3.0, React 19.2.8, TypeScript 7.0.2, Tailwind CSS 4.3.3, Zod 4.4.3, Lucide React 1.31.0, Vitest 4.1.10, Testing Library 16.3.2, jsdom 30.0.1, Playwright 1.62.1, npm.
+**Tech Stack:** Next.js 16.3.0, React 19.2.8, TypeScript 5.9.3, Tailwind CSS 4.3.3, Zod 4.4.3, Lucide React 1.31.0, Vitest 4.1.10, Testing Library 16.3.2, jsdom 30.0.1, Playwright 1.62.1, npm.
 
 ## Global Constraints
 
@@ -145,7 +145,7 @@ Run:
 
 ```bash
 npm install next@16.3.0 react@19.2.8 react-dom@19.2.8 zod@4.4.3 lucide-react@1.31.0
-npm install -D typescript@7.0.2 @types/node@26.2.0 @types/react@19.2.18 @types/react-dom@19.2.4 tailwindcss@4.3.3 @tailwindcss/postcss@4.3.3 eslint@10.8.1 eslint-config-next@16.3.0 vitest@4.1.10 @vitejs/plugin-react@6.0.5 vite@8.2.1 jsdom@30.0.1 @testing-library/react@16.3.2 @testing-library/jest-dom@7.0.1 @testing-library/user-event@14.6.3 @playwright/test@1.62.1 tsx@4.23.12
+npm install -D typescript@5.9.3 @types/node@26.2.0 @types/react@19.2.18 @types/react-dom@19.2.4 tailwindcss@4.3.3 @tailwindcss/postcss@4.3.3 eslint@10.8.1 eslint-config-next@16.3.0 vitest@4.1.10 @vitejs/plugin-react@6.0.5 vite@8.2.1 jsdom@30.0.1 @testing-library/react@16.3.2 @testing-library/jest-dom@7.0.1 @testing-library/user-event@14.6.3 @playwright/test@1.62.1 tsx@4.23.12
 ```
 
 - [ ] **Step 3: Add the configs and run the test to observe the missing page failure**
