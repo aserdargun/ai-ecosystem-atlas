@@ -151,9 +151,11 @@ separately when verifying rendered workflows or preparing a release.
 
 ## Deployment
 
-Production is published at [https://ai.aserdargun.com](https://ai.aserdargun.com) on Azure Static Web Apps Free.
+Production will be published at [https://ai.aserdargun.com](https://ai.aserdargun.com) on Azure Static Web Apps Free once the Azure Static Web App, GitHub Actions secret, custom hostname, and IHS DNS mapping are provisioned and verified.
 
-The `main` branch is the production source. [`.github/workflows/deploy-azure-static-web-apps.yml`](.github/workflows/deploy-azure-static-web-apps.yml) installs locked dependencies, validates canonical data, runs lint, strict TypeScript checks, and unit/component tests, builds the static Next.js export, verifies `out/index.html` and Next.js assets, and only then uploads the prebuilt `out/` directory to Azure.
+The `main` branch is the intended production source. [`.github/workflows/deploy-azure-static-web-apps.yml`](.github/workflows/deploy-azure-static-web-apps.yml) installs locked dependencies, validates canonical data, runs lint, strict TypeScript checks, and unit/component tests, builds the static Next.js export, verifies `out/index.html` and Next.js assets, and only then uploads the prebuilt `out/` directory to Azure.
+
+The target deployment settings are:
 
 | Deployment setting | Value |
 | --- | --- |
@@ -165,11 +167,11 @@ The `main` branch is the production source. [`.github/workflows/deploy-azure-sta
 | Build output | `out/` |
 | Custom hostname | `ai.aserdargun.com` |
 
-The workflow reads the Azure deployment token only from the repository Actions secret `AZURE_STATIC_WEB_APPS_API_TOKEN`. The secret value must never be placed in source, documentation, issue text, build logs, or the client bundle.
+When provisioned, the workflow will read the Azure deployment token only from the repository Actions secret `AZURE_STATIC_WEB_APPS_API_TOKEN`. The secret value must never be placed in source, documentation, issue text, build logs, or the client bundle.
 
-IHS remains authoritative for `aserdargun.com`. The production mapping uses the Azure validation TXT record at `_dnsauth.ai.aserdargun.com` and an `ai.aserdargun.com` CNAME targeting the generated Azure Static Web Apps hostname. Apex, `www`, mail, nameserver, and unrelated DNS records are outside this application's deployment scope.
+IHS remains authoritative for `aserdargun.com`. The intended production mapping will use the Azure validation TXT record at `_dnsauth.ai.aserdargun.com` and an `ai.aserdargun.com` CNAME targeting the generated Azure Static Web Apps hostname. Apex, `www`, mail, nameserver, and unrelated DNS records are outside this application's deployment scope.
 
-To publish an application or data update:
+After the target deployment prerequisites above are complete, publish an application or data update:
 
 1. Make and review the canonical source change on a feature branch.
 2. Run `npm run check` and `npm run test:e2e` locally.
@@ -177,7 +179,7 @@ To publish an application or data update:
 4. Confirm the `Deploy AI Ecosystem Atlas to Azure` workflow succeeds.
 5. Smoke-test the affected behavior at `https://ai.aserdargun.com`.
 
-`npm run test:e2e` uses localhost by default. To run the same suite against production without starting a local server:
+`npm run test:e2e` uses localhost by default. After production is live, run the same suite against it without starting a local server:
 
 ```bash
 PLAYWRIGHT_BASE_URL=https://ai.aserdargun.com npm run test:e2e
