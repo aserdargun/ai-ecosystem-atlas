@@ -153,7 +153,7 @@ separately when verifying rendered workflows or preparing a release.
 
 Production will be published at [https://ai.aserdargun.com](https://ai.aserdargun.com) on Azure Static Web Apps Free once the Azure Static Web App, GitHub Actions secret, custom hostname, and IHS DNS mapping are provisioned and verified.
 
-The `main` branch is the intended production source. [`.github/workflows/deploy-azure-static-web-apps.yml`](.github/workflows/deploy-azure-static-web-apps.yml) installs locked dependencies, validates canonical data, runs lint, strict TypeScript checks, and unit/component tests, builds the static Next.js export, verifies `out/index.html` and Next.js assets, and only then uploads the prebuilt `out/` directory to Azure.
+The `main` branch is the intended production source. [`.github/workflows/azure-static-web-apps-salmon-mud-0651e6703.yml`](.github/workflows/azure-static-web-apps-salmon-mud-0651e6703.yml) installs locked dependencies, validates canonical data, runs lint, strict TypeScript checks, and unit/component tests, builds the static Next.js export, verifies `out/index.html` and Next.js assets, and only then uploads the prebuilt `out/` directory to Azure.
 
 The target deployment settings are:
 
@@ -238,7 +238,7 @@ Important limitations:
 ```text
 .
 ├── .github/workflows/
-│   └── deploy-azure-static-web-apps.yml # Pinned production deployment workflow
+│   └── azure-static-web-apps-salmon-mud-0651e6703.yml # Pinned production deployment workflow
 ├── docs/superpowers/          # Approved product specification and implementation plan
 ├── e2e/
 │   └── atlas.spec.ts          # Chromium workflow, responsive, focus, and overflow coverage
