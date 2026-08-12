@@ -246,6 +246,28 @@ it("renders a reversed pair from browser URL state", async () => {
   ).toBeVisible();
 });
 
+it("adopts browser URL state only once when dataset props re-render", async () => {
+  window.history.replaceState({}, "", "/?left=openai&right=anthropic");
+  const { rerender } = renderConsole();
+
+  await waitFor(() => {
+    expect(screen.getByRole("combobox", { name: /left vendor/i })).toHaveValue(
+      "openai",
+    );
+  });
+
+  window.history.replaceState({}, "", "/");
+  rerender(<ResearchConsole dataset={{ ...atlasDataset }} />);
+  await act(async () => {});
+
+  expect(screen.getByRole("combobox", { name: /left vendor/i })).toHaveValue(
+    "openai",
+  );
+  expect(screen.getByRole("combobox", { name: /right vendor/i })).toHaveValue(
+    "anthropic",
+  );
+});
+
 it("switches the filtered dataset into the vendor comparison and round-trips the URL", async () => {
   const user = userEvent.setup();
   renderConsole();

@@ -2,10 +2,9 @@
 
 import {
   useDeferredValue,
-  useEffect,
   useMemo,
-  useRef,
   useState,
+  useSyncExternalStore,
   useTransition,
 } from "react";
 import { useRouter } from "next/navigation";
@@ -54,22 +53,55 @@ function copyAtlasState(state: Readonly<AtlasState>): AtlasState {
   };
 }
 
+type AtlasStateStore = {
+  subscribe(listener: () => void): () => void;
+  getSnapshot(): AtlasState;
+  getServerSnapshot(): AtlasState;
+  getState(): AtlasState;
+  setState(nextState: AtlasState): void;
+};
+
+function createAtlasStateStore(dataset: AtlasDataset): AtlasStateStore {
+  const serverSnapshot = copyAtlasState(defaultAtlasState);
+  let state =
+    typeof window === "undefined"
+      ? serverSnapshot
+      : parseUrlState(new URLSearchParams(window.location.search), dataset);
+  const listeners = new Set<() => void>();
+
+  return {
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    getSnapshot() {
+      return state;
+    },
+    getServerSnapshot() {
+      return serverSnapshot;
+    },
+    getState() {
+      return state;
+    },
+    setState(nextState) {
+      state = nextState;
+      for (const listener of listeners) {
+        listener();
+      }
+    },
+  };
+}
+
 export function ResearchConsole({ dataset }: { dataset: AtlasDataset }) {
   const router = useRouter();
-  const [state, setState] = useState(() => copyAtlasState(defaultAtlasState));
-  const latestState = useRef(state);
+  const [stateStore] = useState(() => createAtlasStateStore(dataset));
+  const state = useSyncExternalStore(
+    stateStore.subscribe,
+    stateStore.getSnapshot,
+    stateStore.getServerSnapshot,
+  );
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-
-  useEffect(() => {
-    const browserState = parseUrlState(
-      new URLSearchParams(window.location.search),
-      dataset,
-    );
-    latestState.current = browserState;
-    setState(browserState);
-  }, [dataset]);
-
   const {
     query,
     categoryId,
@@ -128,30 +160,29 @@ export function ResearchConsole({ dataset }: { dataset: AtlasDataset }) {
   }
 
   function commitState(nextState: AtlasState, urgent = false) {
-    latestState.current = nextState;
     setExpandedRowId(null);
     writeUrl(nextState);
 
     if (urgent) {
-      setState(nextState);
+      stateStore.setState(nextState);
       return;
     }
 
-    startTransition(() => setState(nextState));
+    startTransition(() => stateStore.setState(nextState));
   }
 
   function applyFilter(update: (current: AtlasState) => AtlasState) {
-    commitState(update(latestState.current));
+    commitState(update(stateStore.getState()));
   }
 
   function handleQueryChange(nextQuery: string) {
     const limitedQuery = nextQuery.slice(0, 120);
-    commitState({ ...latestState.current, query: limitedQuery }, true);
+    commitState({ ...stateStore.getState(), query: limitedQuery }, true);
   }
 
   function handleVendorChange(side: "left" | "right", vendorId: string) {
     if (!vendorById.has(vendorId)) return;
-    const current = latestState.current;
+    const current = stateStore.getState();
     if (side === "left" && vendorId !== current.rightVendorId) {
       applyFilter((latest) => ({ ...latest, leftVendorId: vendorId }));
     }
@@ -171,7 +202,7 @@ export function ResearchConsole({ dataset }: { dataset: AtlasDataset }) {
   function resetFilters() {
     commitState({
       ...copyAtlasState(defaultAtlasState),
-      view: latestState.current.view,
+      view: stateStore.getState().view,
     });
   }
 
