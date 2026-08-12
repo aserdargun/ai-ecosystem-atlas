@@ -52,14 +52,14 @@ The canonical display order is enforced during validation:
 
 ## Architecture
 
-The application uses Next.js App Router, React, strict TypeScript, Tailwind CSS, and Zod. The server page imports and validates the repository-managed dataset once. Static page content stays server-rendered, while one focused `ResearchConsole` client boundary owns search, filter controls, vendor selection, row disclosure, view switching, and URL synchronization. Pure selector functions build immutable comparison rows and summaries; the client does not fetch or mutate data.
+The application uses Next.js App Router, React, strict TypeScript, Tailwind CSS, and Zod. The statically exported page imports and validates the repository-managed dataset once. Static page content is generated at build time, while one focused `ResearchConsole` client boundary owns search, filter controls, vendor selection, row disclosure, view switching, and URL synchronization. On first hydration that client boundary validates `window.location.search`; later interactions use the canonical serializer and client-side history replacement. Pure selector functions build immutable comparison rows and summaries, and the client does not fetch or mutate data.
 
 ```text
 Canonical records
   -> Zod parsing and relationship validation
   -> normalized AtlasDataset
   -> pure selectors and indexes
-  -> server-rendered page shell and serialized public dataset
+  -> statically generated page shell and serialized public dataset
   -> ResearchConsole client boundary
   -> URL-synchronized search, filters, vendor pair, and view
 ```
@@ -137,9 +137,10 @@ npm run typecheck
 npm test
 npm run test:e2e
 npm run build
+npm run verify:static
 ```
 
-Run the validation, lint, type, unit/component, and production-build sequence with one command:
+Run the validation, lint, type, unit/component, production-build, and static artifact verification sequence with one command:
 
 ```bash
 npm run check
@@ -147,6 +148,40 @@ npm run check
 
 `npm run check` intentionally excludes browser tests. Run `npm run test:e2e`
 separately when verifying rendered workflows or preparing a release.
+
+## Deployment
+
+Production is published at [https://ai.aserdargun.com](https://ai.aserdargun.com) on Azure Static Web Apps Free.
+
+The `main` branch is the production source. [`.github/workflows/deploy-azure-static-web-apps.yml`](.github/workflows/deploy-azure-static-web-apps.yml) installs locked dependencies, validates canonical data, runs lint, strict TypeScript checks, and unit/component tests, builds the static Next.js export, verifies `out/index.html` and Next.js assets, and only then uploads the prebuilt `out/` directory to Azure.
+
+| Deployment setting | Value |
+| --- | --- |
+| Azure resource group | `rg-ai-ecosystem-atlas` |
+| Azure Static Web App | `swa-ai-ecosystem-atlas` |
+| Azure region | `West Europe` |
+| Azure plan | `Free` |
+| Production branch | `main` |
+| Build output | `out/` |
+| Custom hostname | `ai.aserdargun.com` |
+
+The workflow reads the Azure deployment token only from the repository Actions secret `AZURE_STATIC_WEB_APPS_API_TOKEN`. The secret value must never be placed in source, documentation, issue text, build logs, or the client bundle.
+
+IHS remains authoritative for `aserdargun.com`. The production mapping uses the Azure validation TXT record at `_dnsauth.ai.aserdargun.com` and an `ai.aserdargun.com` CNAME targeting the generated Azure Static Web Apps hostname. Apex, `www`, mail, nameserver, and unrelated DNS records are outside this application's deployment scope.
+
+To publish an application or data update:
+
+1. Make and review the canonical source change on a feature branch.
+2. Run `npm run check` and `npm run test:e2e` locally.
+3. Update `main` only after the checks pass.
+4. Confirm the `Deploy AI Ecosystem Atlas to Azure` workflow succeeds.
+5. Smoke-test the affected behavior at `https://ai.aserdargun.com`.
+
+`npm run test:e2e` uses localhost by default. To run the same suite against production without starting a local server:
+
+```bash
+PLAYWRIGHT_BASE_URL=https://ai.aserdargun.com npm run test:e2e
+```
 
 ## Updating the atlas
 
@@ -200,11 +235,14 @@ Important limitations:
 
 ```text
 .
+├── .github/workflows/
+│   └── deploy-azure-static-web-apps.yml # Pinned production deployment workflow
 ├── docs/superpowers/          # Approved product specification and implementation plan
 ├── e2e/
 │   └── atlas.spec.ts          # Chromium workflow, responsive, focus, and overflow coverage
 ├── scripts/
-│   └── validate-data.ts       # Deterministic dataset validation entry point
+│   ├── validate-data.ts       # Deterministic dataset validation entry point
+│   └── verify-static-export.ts # Static build artifact verification entry point
 ├── src/
 │   ├── app/                   # Next.js App Router shell and global styles
 │   ├── components/atlas/      # Research Console, table, evidence, filters, vendor view
