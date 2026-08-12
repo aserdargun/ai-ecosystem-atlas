@@ -1,6 +1,6 @@
 # AI Ecosystem Atlas — Azure Static Web Apps Deployment Design
 
-**Status:** Approved in conversation on 2026-08-12; written-spec review pending
+**Status:** Written specification approved by the user on 2026-08-12
 
 **Repository:** `aserdargun/ai-ecosystem-atlas`
 
