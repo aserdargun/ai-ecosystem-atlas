@@ -26,7 +26,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "validate:data": "tsx scripts/validate-data.ts",
-    "check": "npm run validate:data && npm run lint && npm run typecheck && npm test && npm run build"
+    "verify:static": "tsx scripts/verify-static-export.ts",
+    "check": "npm run validate:data && npm run lint && npm run typecheck && npm test && npm run build && npm run verify:static"
   },
   "dependencies": {
     "lucide-react": "1.31.0",

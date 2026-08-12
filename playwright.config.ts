@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const externalBaseURL = process.env.PLAYWRIGHT_BASE_URL;
+const localBaseURL = "http://127.0.0.1:3000";
+
 export default defineConfig({
   testDir: "./e2e",
   projects: [
@@ -7,13 +10,15 @@ export default defineConfig({
       name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
-        baseURL: "http://127.0.0.1:3000",
+        baseURL: externalBaseURL ?? localBaseURL,
       },
     },
   ],
-  webServer: {
-    command: "npm run dev -- --hostname 127.0.0.1",
-    url: "http://127.0.0.1:3000",
-    reuseExistingServer: !process.env.CI,
-  },
+  webServer: externalBaseURL
+    ? undefined
+    : {
+        command: "npm run dev -- --hostname 127.0.0.1",
+        url: localBaseURL,
+        reuseExistingServer: !process.env.CI,
+      },
 });

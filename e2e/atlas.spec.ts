@@ -228,3 +228,28 @@ test("desktop: reaches evidence through natural Tab order with visible focus", a
     page.getByRole("link", { name: /official source/i }).first(),
   ).toHaveAttribute("href", /^https:\/\//);
 });
+
+test("direct query URL restores filters, vendor order, and view", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(
+    "/?q=terminal+cli&category=coding-agents&left=openai&right=anthropic&view=vendors",
+  );
+
+  await expect(
+    page.getByRole("searchbox", { name: /search capabilities/i }),
+  ).toHaveValue("terminal cli");
+  await expect(page.getByRole("combobox", { name: /left vendor/i })).toHaveValue(
+    "openai",
+  );
+  await expect(page.getByRole("combobox", { name: /right vendor/i })).toHaveValue(
+    "anthropic",
+  );
+  await expect(
+    page.getByRole("heading", { name: /openai and anthropic vendor comparison/i }),
+  ).toBeVisible();
+  await expect(page).toHaveURL(
+    /q=terminal\+cli&category=coding-agents&left=openai&right=anthropic&view=vendors/,
+  );
+});
