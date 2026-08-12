@@ -167,7 +167,7 @@ The target deployment settings are:
 | Build output | `out/` |
 | Custom hostname | `ai.aserdargun.com` |
 
-When provisioned, the workflow will read the Azure deployment token only from the repository Actions secret `AZURE_STATIC_WEB_APPS_API_TOKEN`. The secret value must never be placed in source, documentation, issue text, build logs, or the client bundle.
+When provisioned, the workflow will read the Azure deployment token only from the repository Actions secret `AZURE_STATIC_WEB_APPS_API_TOKEN_SALMON_MUD_0651E6703`. The secret value must never be placed in source, documentation, issue text, build logs, or the client bundle.
 
 IHS remains authoritative for `aserdargun.com`. The intended production mapping will use the Azure validation TXT record at `_dnsauth.ai.aserdargun.com` and an `ai.aserdargun.com` CNAME targeting the generated Azure Static Web Apps hostname. Apex, `www`, mail, nameserver, and unrelated DNS records are outside this application's deployment scope.
 
