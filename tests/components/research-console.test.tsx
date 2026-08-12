@@ -1,9 +1,15 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import { ResearchConsole } from "@/components/atlas/research-console";
 import { atlasDataset } from "@/data/index";
-import { defaultAtlasState } from "@/lib/url-state";
 
 const replace = vi.fn();
 
@@ -13,12 +19,11 @@ vi.mock("next/navigation", () => ({
 
 beforeEach(() => {
   replace.mockClear();
+  window.history.replaceState({}, "", "/");
 });
 
-function renderConsole(initialState = defaultAtlasState) {
-  return render(
-    <ResearchConsole dataset={atlasDataset} initialState={initialState} />,
-  );
+function renderConsole() {
+  return render(<ResearchConsole dataset={atlasDataset} />);
 }
 
 it("searches the real atlas and expands official evidence", async () => {
@@ -197,16 +202,42 @@ it("swaps vendors atomically in controls, table order, accents, and URL state", 
   );
 });
 
-it("renders a reversed pair from initial URL state", () => {
-  renderConsole({
-    ...defaultAtlasState,
-    leftVendorId: "openai",
-    rightVendorId: "anthropic",
+it("hydrates validated state from the browser query without rewriting it", async () => {
+  window.history.replaceState(
+    {},
+    "",
+    "/?q=terminal+cli&category=coding-agents&left=openai&right=anthropic&view=vendors",
+  );
+
+  renderConsole();
+
+  await waitFor(() => {
+    expect(screen.getByRole("combobox", { name: /left vendor/i })).toHaveValue(
+      "openai",
+    );
+  });
+  expect(screen.getByRole("combobox", { name: /right vendor/i })).toHaveValue(
+    "anthropic",
+  );
+  expect(screen.getByRole("searchbox", { name: /search capabilities/i })).toHaveValue(
+    "terminal cli",
+  );
+  expect(
+    screen.getByRole("heading", { name: /openai and anthropic vendor comparison/i }),
+  ).toBeVisible();
+  expect(replace).not.toHaveBeenCalled();
+});
+
+it("renders a reversed pair from browser URL state", async () => {
+  window.history.replaceState({}, "", "/?left=openai&right=anthropic");
+  renderConsole();
+
+  await waitFor(() => {
+    expect(screen.getByRole("combobox", { name: /left vendor/i })).toHaveValue(
+      "openai",
+    );
   });
 
-  expect(screen.getByRole("combobox", { name: /left vendor/i })).toHaveValue(
-    "openai",
-  );
   expect(screen.getByRole("combobox", { name: /right vendor/i })).toHaveValue(
     "anthropic",
   );
@@ -252,11 +283,14 @@ it("summarizes only the rows matched by an active search in vendor view", async 
   );
 });
 
-it("restores the vendor comparison from parsed initial URL state", () => {
-  renderConsole({ ...defaultAtlasState, view: "vendors" });
+it("restores the vendor comparison from browser URL state", async () => {
+  window.history.replaceState({}, "", "/?view=vendors");
+  renderConsole();
 
   expect(
-    screen.getByRole("heading", { name: /anthropic and openai vendor comparison/i }),
+    await screen.findByRole("heading", {
+      name: /anthropic and openai vendor comparison/i,
+    }),
   ).toBeVisible();
   expect(screen.getByRole("button", { name: "Vendor comparison" })).toHaveAttribute(
     "aria-pressed",

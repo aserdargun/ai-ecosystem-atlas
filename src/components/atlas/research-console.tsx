@@ -2,6 +2,7 @@
 
 import {
   useDeferredValue,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -30,6 +31,7 @@ import {
 import type { Freshness } from "@/lib/freshness";
 import {
   defaultAtlasState,
+  parseUrlState,
   serializeUrlState,
   type AtlasState,
 } from "@/lib/url-state";
@@ -52,18 +54,22 @@ function copyAtlasState(state: Readonly<AtlasState>): AtlasState {
   };
 }
 
-export function ResearchConsole({
-  dataset,
-  initialState,
-}: {
-  dataset: AtlasDataset;
-  initialState: Readonly<AtlasState>;
-}) {
+export function ResearchConsole({ dataset }: { dataset: AtlasDataset }) {
   const router = useRouter();
-  const [state, setState] = useState(() => copyAtlasState(initialState));
+  const [state, setState] = useState(() => copyAtlasState(defaultAtlasState));
   const latestState = useRef(state);
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    const browserState = parseUrlState(
+      new URLSearchParams(window.location.search),
+      dataset,
+    );
+    latestState.current = browserState;
+    setState(browserState);
+  }, [dataset]);
+
   const {
     query,
     categoryId,
