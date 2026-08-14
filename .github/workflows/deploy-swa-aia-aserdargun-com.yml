@@ -1,4 +1,4 @@
-name: Deploy AI Ecosystem Atlas to Azure
+name: Deploy AIA to Azure Static Web Apps
 
 on:
   push:
@@ -8,10 +8,9 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 concurrency:
-  group: ai-ecosystem-atlas-production
+  group: swa-aia-aserdargun-com-production
   cancel-in-progress: true
 
 jobs:
@@ -53,19 +52,11 @@ jobs:
       - name: Verify static export
         run: npm run verify:static
 
-      - name: Request GitHub OIDC token
-        id: idtoken
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
-        with:
-          script: return await core.getIDToken()
-          result-encoding: string
-
       - name: Deploy prebuilt artifact to Azure Static Web Apps
         uses: Azure/static-web-apps-deploy@1a947af9992250f3bc2e68ad0754c0b0c11566c9 # v1
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_SALMON_MUD_0651E6703 }}
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_SWA_AIA_ASERDARGUN_COM }}
           action: upload
           app_location: out
-          github_id_token: ${{ steps.idtoken.outputs.result }}
           output_location: ""
           skip_app_build: true

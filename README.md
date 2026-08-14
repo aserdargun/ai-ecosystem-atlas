@@ -151,38 +151,39 @@ separately when verifying rendered workflows or preparing a release.
 
 ## Deployment
 
-Production will be published at [https://ai.aserdargun.com](https://ai.aserdargun.com) on Azure Static Web Apps Free once the Azure Static Web App, GitHub Actions secret, custom hostname, and IHS DNS mapping are provisioned and verified.
+Production is published at [https://brave-stone-05e2d3603.7.azurestaticapps.net](https://brave-stone-05e2d3603.7.azurestaticapps.net) on Azure Static Web Apps Free using the Azure-provided default hostname. A custom domain and DNS mapping are intentionally not configured for this deployment.
 
-The `main` branch is the intended production source. [`.github/workflows/azure-static-web-apps-salmon-mud-0651e6703.yml`](.github/workflows/azure-static-web-apps-salmon-mud-0651e6703.yml) installs locked dependencies, validates canonical data, runs lint, strict TypeScript checks, and unit/component tests, builds the static Next.js export, verifies `out/index.html` and Next.js assets, and only then uploads the prebuilt `out/` directory to Azure.
+The `main` branch is the production source. [`.github/workflows/deploy-swa-aia-aserdargun-com.yml`](.github/workflows/deploy-swa-aia-aserdargun-com.yml) installs locked dependencies, validates canonical data, runs lint, strict TypeScript checks, and unit/component tests, builds the static Next.js export, verifies `out/index.html` and Next.js assets, and only then uploads the prebuilt `out/` directory to Azure.
 
 The target deployment settings are:
 
 | Deployment setting | Value |
 | --- | --- |
-| Azure resource group | `rg-ai-ecosystem-atlas` |
-| Azure Static Web App | `swa-ai-ecosystem-atlas` |
+| Azure resource group | `rg-aia-aserdargun-com` |
+| Azure Static Web App | `swa-aia-aserdargun-com` |
 | Azure region | `West Europe` |
 | Azure plan | `Free` |
 | Production branch | `main` |
 | Build output | `out/` |
-| Custom hostname | `ai.aserdargun.com` |
+| Production URL | `https://brave-stone-05e2d3603.7.azurestaticapps.net` |
+| Custom hostname | Not configured |
 
-When provisioned, the workflow will read the Azure deployment token only from the repository Actions secret `AZURE_STATIC_WEB_APPS_API_TOKEN_SALMON_MUD_0651E6703`. The secret value must never be placed in source, documentation, issue text, build logs, or the client bundle.
+The workflow reads the Azure deployment token only from the repository Actions secret `AZURE_STATIC_WEB_APPS_API_TOKEN_SWA_AIA_ASERDARGUN_COM`. The secret value must never be placed in source, documentation, issue text, build logs, or the client bundle.
 
-IHS remains authoritative for `aserdargun.com`. The intended production mapping will use the Azure validation TXT record at `_dnsauth.ai.aserdargun.com` and an `ai.aserdargun.com` CNAME targeting the generated Azure Static Web Apps hostname. Apex, `www`, mail, nameserver, and unrelated DNS records are outside this application's deployment scope.
+IHS and all `aserdargun.com` DNS records remain unchanged. Custom-domain validation, CNAME/TXT records, apex, `www`, mail, nameserver, and unrelated DNS records are outside this deployment's scope.
 
 After the target deployment prerequisites above are complete, publish an application or data update:
 
 1. Make and review the canonical source change on a feature branch.
 2. Run `npm run check` and `npm run test:e2e` locally.
 3. Update `main` only after the checks pass.
-4. Confirm the `Deploy AI Ecosystem Atlas to Azure` workflow succeeds.
-5. Smoke-test the affected behavior at `https://ai.aserdargun.com`.
+4. Confirm the `Deploy AIA to Azure Static Web Apps` workflow succeeds.
+5. Smoke-test the affected behavior at the Azure-provided production URL.
 
 `npm run test:e2e` uses localhost by default. After production is live, run the same suite against it without starting a local server:
 
 ```bash
-PLAYWRIGHT_BASE_URL=https://ai.aserdargun.com npm run test:e2e
+PLAYWRIGHT_BASE_URL=https://brave-stone-05e2d3603.7.azurestaticapps.net npm run test:e2e
 ```
 
 ## Updating the atlas
@@ -238,7 +239,7 @@ Important limitations:
 ```text
 .
 ├── .github/workflows/
-│   └── azure-static-web-apps-salmon-mud-0651e6703.yml # Pinned production deployment workflow
+│   └── deploy-swa-aia-aserdargun-com.yml # Pinned production deployment workflow
 ├── docs/superpowers/          # Approved product specification and implementation plan
 ├── e2e/
 │   └── atlas.spec.ts          # Chromium workflow, responsive, focus, and overflow coverage
