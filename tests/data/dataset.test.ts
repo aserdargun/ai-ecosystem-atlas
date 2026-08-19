@@ -106,17 +106,26 @@ const officialSourceHosts = new Set([
   "chat.z.ai",
   "docs.z.ai",
   "zcode.z.ai",
+  "minimax.com",
+  "platform.minimax.com",
+  "docs.minimax.com",
 ]);
 
-const expectedVendorIds = ["anthropic", "openai", "zai"] as const;
+const expectedVendorIds = ["anthropic", "openai", "zai", "minimax"] as const;
 const expectedVendorPairs = [
+  ["anthropic", "minimax"],
   ["anthropic", "openai"],
   ["anthropic", "zai"],
+  ["minimax", "openai"],
+  ["minimax", "zai"],
   ["openai", "zai"],
 ] as const;
+const expectedPairKeys = expectedVendorPairs
+  .map(([left, right]) => [left, right].sort().join("+"))
+  .sort();
 
 describe("canonical Atlas dataset", () => {
-  it("ships the complete three-vendor seed with evidence for every comparison", () => {
+  it("ships the complete four-vendor seed with evidence for every comparison", () => {
     expect(atlasDataset.vendors.map(({ id }) => id)).toEqual([
       ...expectedVendorIds,
     ]);
@@ -130,8 +139,8 @@ describe("canonical Atlas dataset", () => {
     expect(
       new Set(atlasDataset.capabilities.map((item) => item.categoryId)).size,
     ).toBe(17);
-    expect(atlasDataset.vendorEntries).toHaveLength(198);
-    expect(atlasDataset.assessments).toHaveLength(198);
+    expect(atlasDataset.vendorEntries).toHaveLength(264);
+    expect(atlasDataset.assessments).toHaveLength(396);
     expect(atlasDataset.sources.length).toBeGreaterThanOrEqual(90);
 
     for (const categoryId of expectedCategoryIds) {
@@ -150,20 +159,18 @@ describe("canonical Atlas dataset", () => {
       expect(
         entries.map(({ vendorId }) => vendorId).sort(),
         `vendor entries for ${capability.id}`,
-      ).toEqual([...expectedVendorIds]);
+      ).toEqual([...expectedVendorIds].sort());
 
       const assessments = atlasDataset.assessments.filter(
         (assessment) => assessment.capabilityId === capability.id,
       );
-      expect(assessments, `assessment for ${capability.id}`).toHaveLength(3);
+      expect(assessments, `assessments for ${capability.id}`).toHaveLength(6);
       expect(
-        assessments.map(({ vendorIds }) => [...vendorIds].sort().join("+")).sort(),
+        assessments
+          .map(({ vendorIds }) => [...vendorIds].sort().join("+"))
+          .sort(),
         `assessment pairs for ${capability.id}`,
-      ).toEqual(
-        expectedVendorPairs.map(([left, right]) =>
-          [left, right].sort().join("+"),
-        ).sort(),
-      );
+      ).toEqual(expectedPairKeys);
     }
 
     expect(
@@ -222,18 +229,18 @@ describe("canonical Atlas dataset", () => {
     }
   });
 
-  it("accepts a third-vendor fact through the same normalized entry contract", () => {
+  it("accepts a fifth-vendor fact through the same normalized entry contract", () => {
     const googleEntry = defineVendorEntry({
       id: "google-frontier-model-lineup",
       capabilityId: "frontier-model-lineup",
       vendorId: "google",
       title: "Current Gemini models",
-      summary: "A normalized third-vendor entry used to exercise the authoring contract.",
+      summary: "A normalized fifth-vendor entry used to exercise the authoring contract.",
       details: [],
       productNames: ["Gemini"],
       availability: "available",
       sourceIds: ["openai-models"],
-      verifiedAt: "2026-08-11",
+      verifiedAt: "2026-08-19",
     });
     const extended = parseAtlasDataset(
       {
@@ -245,7 +252,7 @@ describe("canonical Atlas dataset", () => {
             name: "Google",
             shortName: "Gemini",
             ecosystemName: "Gemini ecosystem",
-            description: "A third ecosystem fixture.",
+            description: "A fifth ecosystem fixture.",
             homepageUrl: "https://www.google.com/",
             accent: "#4285f4",
           },
@@ -256,23 +263,7 @@ describe("canonical Atlas dataset", () => {
     );
 
     expect(extended.vendorEntries.at(-1)).toEqual(googleEntry);
-    expect(extended.vendorEntries).toHaveLength(199);
-  });
-
-  it("publishes the verified GLM-5.3 token rates and coding-plan quotas", () => {
-    const glm53 = atlasDataset.models.find(({ id }) => id === "glm-5-3");
-    const glm5 = atlasDataset.models.find(({ id }) => id === "glm-5");
-    const lite = atlasDataset.plans.find(({ id }) => id === "glm-coding-lite");
-
-    expect(glm53?.pricing).toEqual({
-      inputPerMillionUsd: 1.4,
-      cachedInputPerMillionUsd: 0.26,
-      outputPerMillionUsd: 4.4,
-    });
-    expect(glm53?.contextWindowTokens).toBe(1_000_000);
-    expect(glm5?.contextWindowTokens).toBe(200_000);
-    expect(lite?.priceDisplay).toBe("$18/month");
-    expect(lite?.highlights).toContain("10,000 weekly credits with 2,000 credits per 5 hours");
+    expect(extended.vendorEntries).toHaveLength(265);
   });
 
   it("publishes the verified GPT-5.6 Terra and Luna token rates", () => {
@@ -291,6 +282,38 @@ describe("canonical Atlas dataset", () => {
     });
   });
 
+  it("publishes the verified GLM-5.3 token rates and coding-plan quotas", () => {
+    const glm53 = atlasDataset.models.find(({ id }) => id === "glm-5-3");
+    const glm5 = atlasDataset.models.find(({ id }) => id === "glm-5");
+    const lite = atlasDataset.plans.find(({ id }) => id === "glm-coding-lite");
+
+    expect(glm53?.pricing).toEqual({
+      inputPerMillionUsd: 1.4,
+      cachedInputPerMillionUsd: 0.26,
+      outputPerMillionUsd: 4.4,
+    });
+    expect(glm53?.contextWindowTokens).toBe(1_000_000);
+    expect(glm5?.contextWindowTokens).toBe(200_000);
+    expect(lite?.priceDisplay).toBe("$18/month");
+    expect(lite?.highlights).toContain("10,000 weekly credits with 2,000 credits per 5 hours");
+  });
+
+  it("publishes the verified minimax M3 and M2 Pro token rates", () => {
+    const m3 = atlasDataset.models.find(({ id }) => id === "minimax-m3");
+    const pro = atlasDataset.models.find(({ id }) => id === "minimax-m2-pro");
+
+    expect(m3?.pricing).toEqual({
+      inputPerMillionUsd: 8,
+      cachedInputPerMillionUsd: 0.8,
+      outputPerMillionUsd: 40,
+    });
+    expect(pro?.pricing).toEqual({
+      inputPerMillionUsd: 2,
+      cachedInputPerMillionUsd: 0.2,
+      outputPerMillionUsd: 10,
+    });
+  });
+
   it("describes Claude Max with source-supported usage multiples", () => {
     const max5x = atlasDataset.plans.find(({ id }) => id === "claude-max-5x");
     const max20x = atlasDataset.plans.find(({ id }) => id === "claude-max-20x");
@@ -300,5 +323,17 @@ describe("canonical Atlas dataset", () => {
     expect([...max5x!.highlights, ...max20x!.highlights].join(" ")).not.toMatch(
       /capacity/i,
     );
+  });
+
+  it("describes minimax Max with source-supported usage multiples", () => {
+    const max5x = atlasDataset.plans.find(
+      ({ id }) => id === "minimax-max-5x",
+    );
+    const max20x = atlasDataset.plans.find(
+      ({ id }) => id === "minimax-max-20x",
+    );
+
+    expect(max5x?.highlights).toContain("5x more usage than Pro");
+    expect(max20x?.highlights).toContain("20x more usage than Pro");
   });
 });

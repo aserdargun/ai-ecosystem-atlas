@@ -181,7 +181,7 @@ export const sourceSchema = z
   .object({
     id: idSchema,
     title: z.string(),
-    publisher: z.enum(["Anthropic", "OpenAI", "Z.ai"]),
+    publisher: z.enum(["Anthropic", "OpenAI", "Z.ai", "minimax"]),
     url: httpsUrlSchema,
     sourceType: z.enum([
       "documentation",

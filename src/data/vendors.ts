@@ -31,4 +31,14 @@ export const vendors = [
     homepageUrl: "https://z.ai/",
     accent: "#3a66c4",
   },
+  {
+    id: "minimax",
+    name: "minimax",
+    shortName: "Mavis",
+    ecosystemName: "Mavis ecosystem",
+    description:
+      "minimax's foundation models, minimax Code coding agent, Mavis agent runtime, and developer platform.",
+    homepageUrl: "https://minimax.com/",
+    accent: "#5b5fc7",
+  },
 ] satisfies Vendor[];
