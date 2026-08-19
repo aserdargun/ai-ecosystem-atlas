@@ -256,13 +256,11 @@ export function ResearchConsole({ dataset }: { dataset: AtlasDataset }) {
             "Category",
             "Capability",
             ...dataset.vendors.map((vendor) => vendor.name),
-            "Coverage",
           ],
           rows: matrixRows.map((row) => [
             row.category.name,
             row.capability.name,
-            ...row.cells.map((cell) => availabilityLabels[cell.entry.availability]),
-            Math.round(row.score * 100) + "%",
+            ...row.cells.map((cell) => cell.score + "/10"),
           ]),
         }
       : {

@@ -59,6 +59,7 @@ export type VendorMatrixCell = Readonly<{
   vendor: Immutable<Vendor>;
   entry: ComparisonEntry;
   sources: readonly Immutable<Source>[];
+  score: number;
 }>;
 
 export type VendorMatrixRow = Readonly<{
@@ -66,33 +67,26 @@ export type VendorMatrixRow = Readonly<{
   capability: Immutable<Capability>;
   cells: readonly VendorMatrixCell[];
   searchText: string;
-  score: number;
 }>;
 
 const availabilityScore: Record<Availability, number> = {
-  available: 1,
-  limited: 0.5,
+  available: 10,
+  limited: 5,
   "not-available": 0,
   "not-documented": 0,
   unknown: 0,
 };
 
-export function buildVendorMatrixScore(
-  cells: readonly VendorMatrixCell[],
-): number {
-  if (cells.length === 0) return 0;
-  const total = cells.reduce(
-    (sum, cell) => sum + availabilityScore[cell.entry.availability],
-    0,
-  );
-  return total / cells.length;
+export function availabilityScoreOutOf10(availability: Availability): number {
+  return availabilityScore[availability];
 }
 
 export function buildMatrixOverallScore(
   rows: readonly VendorMatrixRow[],
 ): number {
-  if (rows.length === 0) return 0;
-  return rows.reduce((sum, row) => sum + row.score, 0) / rows.length;
+  const cells = rows.flatMap((row) => row.cells);
+  if (cells.length === 0) return 0;
+  return cells.reduce((sum, cell) => sum + cell.score, 0) / cells.length;
 }
 
 function entryKey(capabilityId: string, vendorId: string): string {
@@ -452,7 +446,12 @@ export function buildVendorMatrix(
           }),
         );
 
-        return Object.freeze({ vendor, entry, sources: cellSources });
+        return Object.freeze({
+          vendor,
+          entry,
+          sources: cellSources,
+          score: availabilityScore[entry.availability],
+        });
       });
 
       const searchText = [
@@ -475,7 +474,6 @@ export function buildVendorMatrix(
         capability: immutableCapability(capability),
         cells: Object.freeze(cells),
         searchText,
-        score: buildVendorMatrixScore(cells),
       });
     }),
   );

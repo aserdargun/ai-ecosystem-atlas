@@ -150,12 +150,14 @@ describe("comparison selectors", () => {
     ).toBe(true);
   });
 
-  it("scores each capability by availability coverage across vendors", () => {
+  it("scores each cell out of 10 by availability", () => {
     const rows = buildVendorMatrix(atlasDataset);
 
     for (const row of rows) {
-      expect(row.score).toBeGreaterThanOrEqual(0);
-      expect(row.score).toBeLessThanOrEqual(1);
+      for (const cell of row.cells) {
+        expect(cell.score).toBeGreaterThanOrEqual(0);
+        expect(cell.score).toBeLessThanOrEqual(10);
+      }
     }
 
     const allAvailable = {
@@ -165,18 +167,19 @@ describe("comparison selectors", () => {
         availability: "available" as const,
       })),
     };
-    expect(buildVendorMatrix(allAvailable)[0].score).toBe(1);
+    expect(buildVendorMatrix(allAvailable)[0].cells[0].score).toBe(10);
   });
 
-  it("averages per-capability scores into an overall coverage score", () => {
+  it("averages cell scores into an overall score out of 10", () => {
     const rows = buildVendorMatrix(atlasDataset);
     const overall = buildMatrixOverallScore(rows);
+    const cells = rows.flatMap((row) => row.cells);
     const manualAverage =
-      rows.reduce((sum, row) => sum + row.score, 0) / rows.length;
+      cells.reduce((sum, cell) => sum + cell.score, 0) / cells.length;
 
     expect(overall).toBeCloseTo(manualAverage);
     expect(overall).toBeGreaterThanOrEqual(0);
-    expect(overall).toBeLessThanOrEqual(1);
+    expect(overall).toBeLessThanOrEqual(10);
   });
 
   it("prevents nested row changes from corrupting the source dataset", () => {

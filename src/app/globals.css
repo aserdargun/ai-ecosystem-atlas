@@ -678,7 +678,7 @@ a {
 
 .vendor-matrix-table {
   width: 100%;
-  min-width: 1400px;
+  min-width: 1280px;
   border-collapse: separate;
   border-spacing: 0;
   table-layout: fixed;
@@ -722,11 +722,6 @@ a {
   width: 176px;
 }
 
-.vendor-matrix-table thead th.coverage-heading {
-  width: 120px;
-  box-shadow: inset 0 3px var(--atlas-accent);
-}
-
 .vendor-matrix-table tbody th,
 .vendor-matrix-table tbody td {
   padding: 11px 12px;
@@ -749,32 +744,26 @@ a {
   line-height: 1.3;
 }
 
-.coverage-cell {
-  min-width: 120px;
-}
-
-.coverage-cell__value {
+.vendor-matrix-cell__score {
   display: block;
+  margin-bottom: 7px;
   font-family: var(--atlas-content-font);
-  font-size: 0.92rem;
+  font-size: 1.05rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
 
-.coverage-cell__bar {
-  display: block;
-  height: 6px;
-  margin-top: 8px;
-  border-radius: 3px;
-  background: var(--atlas-surface-muted);
-  overflow: hidden;
+.vendor-matrix-cell__score--high {
+  color: #087153;
 }
 
-.coverage-cell__bar > span {
-  display: block;
-  height: 100%;
-  border-radius: 3px;
-  background: var(--atlas-accent);
+.vendor-matrix-cell__score--mid {
+  color: #a34320;
+}
+
+.vendor-matrix-cell__score--low {
+  color: #a22c2c;
 }
 
 .comparison-table tbody th,

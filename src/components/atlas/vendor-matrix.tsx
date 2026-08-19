@@ -10,8 +10,10 @@ function vendorStyle(vendor: Vendor): CSSProperties {
   return { "--vendor-color": vendor.accent } as CSSProperties;
 }
 
-function formatScore(score: number): string {
-  return Math.round(score * 100) + "%";
+function scoreTier(score: number): string {
+  if (score >= 10) return "high";
+  if (score >= 5) return "mid";
+  return "low";
 }
 
 export function VendorMatrix({
@@ -30,7 +32,7 @@ export function VendorMatrix({
           {rows.length} {rows.length === 1 ? "capability" : "capabilities"} shown
         </strong>
         <span>
-          {vendors.length} vendors · Overall coverage {formatScore(overallScore)}
+          {vendors.length} vendors · Overall score {overallScore.toFixed(1)}/10
         </span>
       </div>
       <div className="table-scroll">
@@ -39,8 +41,8 @@ export function VendorMatrix({
           aria-label="All vendors capability matrix"
         >
           <caption>
-            Availability coverage for every capability across all {vendors.length}{" "}
-            vendors
+            Availability score out of 10 for every capability across all{" "}
+            {vendors.length} vendors
           </caption>
           <thead>
             <tr>
@@ -58,9 +60,6 @@ export function VendorMatrix({
                   <small>{vendor.shortName}</small>
                 </th>
               ))}
-              <th className="coverage-heading" scope="col">
-                Coverage
-              </th>
             </tr>
           </thead>
           <tbody>
@@ -76,16 +75,18 @@ export function VendorMatrix({
                     style={vendorStyle(cell.vendor)}
                     key={cell.vendor.id}
                   >
+                    <span
+                      className={
+                        "vendor-matrix-cell__score vendor-matrix-cell__score--" +
+                        scoreTier(cell.score)
+                      }
+                    >
+                      {cell.score}/10
+                    </span>
                     <StatusBadge kind="availability" value={cell.entry.availability} />
                     <strong>{cell.entry.title}</strong>
                   </td>
                 ))}
-                <td className="coverage-cell">
-                  <span className="coverage-cell__value">{formatScore(row.score)}</span>
-                  <span className="coverage-cell__bar" aria-hidden="true">
-                    <span style={{ width: formatScore(row.score) }} />
-                  </span>
-                </td>
               </tr>
             ))}
           </tbody>

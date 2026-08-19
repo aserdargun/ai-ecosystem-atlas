@@ -318,14 +318,16 @@ it("switches to the all-vendors matrix and round-trips the URL", async () => {
   expect(screen.getByRole("table", { name: /anthropic and openai/i })).toBeVisible();
 });
 
-it("shows coverage scores and export controls in the all-vendors view", async () => {
+it("shows per-cell scores and export controls in the all-vendors view", async () => {
   const user = userEvent.setup();
   renderConsole();
 
   await user.click(screen.getByRole("button", { name: "All vendors" }));
 
-  expect(screen.getByRole("columnheader", { name: "Coverage" })).toBeVisible();
-  expect(screen.getByText(/overall coverage/i)).toBeVisible();
+  expect(
+    screen.queryByRole("columnheader", { name: "Coverage" }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByText(/overall score/i)).toBeVisible();
   expect(screen.getByRole("button", { name: "Export CSV" })).toBeVisible();
   expect(screen.getByRole("button", { name: "Export Excel" })).toBeVisible();
 });
