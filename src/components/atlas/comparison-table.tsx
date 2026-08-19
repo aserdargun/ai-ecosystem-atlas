@@ -33,7 +33,7 @@ export function ComparisonTable({
   }, "");
 
   return (
-    <div className="comparison-panel" id="sources">
+    <div className="comparison-panel">
       <div className="table-summary">
         <strong>
           {rows.length} {rows.length === 1 ? "capability" : "capabilities"} shown

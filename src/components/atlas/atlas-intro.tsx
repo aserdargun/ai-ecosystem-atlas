@@ -23,7 +23,7 @@ export function AtlasIntro({ dataset }: { dataset: AtlasDataset }) {
   const latestVerification = mostRecentDate(dataset);
 
   return (
-    <section className="atlas-intro" id="methodology" aria-labelledby="atlas-title">
+    <section className="atlas-intro" aria-labelledby="atlas-title">
       <div className="atlas-intro__copy">
         <p className="atlas-intro__kicker">Capability explorer</p>
         <h1 id="atlas-title">Compare the ecosystems.</h1>
@@ -52,8 +52,8 @@ export function AtlasIntro({ dataset }: { dataset: AtlasDataset }) {
       </div>
       <dl className="atlas-summary" aria-label="Atlas coverage summary">
         <div>
-          <dt>Latest verification</dt>
-          <dd>{displayDate(latestVerification)}</dd>
+          <dt>Vendors</dt>
+          <dd>{dataset.vendors.length}</dd>
         </div>
       </dl>
     </section>

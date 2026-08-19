@@ -17,6 +17,7 @@ import {
 } from "@/components/atlas/filter-toolbar";
 import { MobileFilterSheet } from "@/components/atlas/mobile-filter-sheet";
 import { VendorComparison } from "@/components/atlas/vendor-comparison";
+import { VendorMatrix } from "@/components/atlas/vendor-matrix";
 import type {
   AtlasDataset,
   Availability,
@@ -25,9 +26,12 @@ import type {
 import {
   buildCategoryCounts,
   buildComparisonRows,
+  buildVendorMatrix,
   filterComparisonRows,
+  filterVendorMatrix,
 } from "@/lib/comparison";
 import type { Freshness } from "@/lib/freshness";
+import { atlasViewLabels } from "@/lib/labels";
 import {
   defaultAtlasState,
   parseUrlState,
@@ -152,6 +156,11 @@ export function ResearchConsole({ dataset }: { dataset: AtlasDataset }) {
     () => new Map(dataset.categories.map((category) => [category.id, category])),
     [dataset.categories],
   );
+  const allMatrixRows = useMemo(() => buildVendorMatrix(dataset), [dataset]);
+  const matrixRows = useMemo(
+    () => filterVendorMatrix(allMatrixRows, filterState),
+    [allMatrixRows, filterState],
+  );
 
   function writeUrl(state: AtlasState) {
     const params = serializeUrlState(state);
@@ -228,6 +237,8 @@ export function ResearchConsole({ dataset }: { dataset: AtlasDataset }) {
     freshness.length ? `${freshness.length} freshness filter(s)` : null,
   ].filter((value): value is string => value !== null);
 
+  const resultCount = view === "all-vendors" ? matrixRows.length : visibleRows.length;
+
   return (
     <section className="research-console" aria-label="Research Console">
       <div className="console-toolbar">
@@ -236,7 +247,7 @@ export function ResearchConsole({ dataset }: { dataset: AtlasDataset }) {
           vendors={dataset.vendors}
           leftVendorId={leftVendorId}
           rightVendorId={rightVendorId}
-          resultCount={visibleRows.length}
+          resultCount={resultCount}
           isFiltered={isFiltered}
           isPending={isPending || query !== deferredQuery}
           onQueryChange={handleQueryChange}
@@ -245,24 +256,18 @@ export function ResearchConsole({ dataset }: { dataset: AtlasDataset }) {
           onReset={resetFilters}
         />
         <div className="view-toggle" role="group" aria-label="Comparison view">
-          <button
-            type="button"
-            aria-pressed={view === "explorer"}
-            onClick={() =>
-              applyFilter((current) => ({ ...current, view: "explorer" }))
-            }
-          >
-            Explorer
-          </button>
-          <button
-            type="button"
-            aria-pressed={view === "vendors"}
-            onClick={() =>
-              applyFilter((current) => ({ ...current, view: "vendors" }))
-            }
-          >
-            Vendor comparison
-          </button>
+          {(["explorer", "vendors", "all-vendors"] as const).map((viewValue) => (
+            <button
+              type="button"
+              aria-pressed={view === viewValue}
+              key={viewValue}
+              onClick={() =>
+                applyFilter((current) => ({ ...current, view: viewValue }))
+              }
+            >
+              {atlasViewLabels[viewValue]}
+            </button>
+          ))}
         </div>
       </div>
       <div className="console-body">
@@ -301,7 +306,13 @@ export function ResearchConsole({ dataset }: { dataset: AtlasDataset }) {
           />
         </MobileFilterSheet>
         <div className="comparison-surface">
-          {visibleRows.length > 0 ? (
+          {view === "all-vendors" ? (
+            matrixRows.length > 0 ? (
+              <VendorMatrix rows={matrixRows} vendors={dataset.vendors} />
+            ) : (
+              <EmptyState constraints={constraints} onReset={resetFilters} />
+            )
+          ) : visibleRows.length > 0 ? (
             view === "explorer" ? (
               <ComparisonTable
                 rows={visibleRows}
@@ -328,9 +339,6 @@ export function ResearchConsole({ dataset }: { dataset: AtlasDataset }) {
           )}
         </div>
       </div>
-      <p className="continuation-note">
-        Next: methodology, freshness rules, and public update provenance
-      </p>
     </section>
   );
 }

@@ -2,8 +2,10 @@ import { atlasDataset } from "@/data";
 import {
   buildCategoryCounts,
   buildComparisonRows,
+  buildVendorMatrix,
   buildVendorSummary,
   filterComparisonRows,
+  filterVendorMatrix,
 } from "@/lib/comparison";
 import { defaultAtlasState } from "@/lib/url-state";
 
@@ -94,6 +96,57 @@ describe("comparison selectors", () => {
     expect(summary.totalCapabilities).toBe(66);
     expect(summary.availability.available).toBeGreaterThan(0);
     expect(summary.statuses["different-approach"]).toBeGreaterThan(0);
+  });
+
+  it("builds one matrix cell per vendor for every capability", () => {
+    const rows = buildVendorMatrix(atlasDataset);
+
+    expect(rows).toHaveLength(66);
+    for (const row of rows) {
+      expect(row.cells).toHaveLength(atlasDataset.vendors.length);
+      expect(row.cells.map((cell) => cell.vendor.id)).toEqual(
+        atlasDataset.vendors.map((vendor) => vendor.id),
+      );
+    }
+  });
+
+  it("synthesizes not-documented matrix cells for missing vendor entries", () => {
+    const datasetWithoutOpenAiMemory = {
+      ...atlasDataset,
+      vendorEntries: atlasDataset.vendorEntries.filter(
+        (entry) =>
+          !(entry.capabilityId === "chat-memory" && entry.vendorId === "openai"),
+      ),
+    };
+
+    const row = buildVendorMatrix(datasetWithoutOpenAiMemory).find(
+      (item) => item.capability.id === "chat-memory",
+    );
+    const openaiCell = row?.cells.find((cell) => cell.vendor.id === "openai");
+
+    expect(openaiCell?.entry).toMatchObject({
+      capabilityId: "chat-memory",
+      vendorId: "openai",
+      title: "Not documented",
+      availability: "not-documented",
+    });
+  });
+
+  it("filters the matrix by category, availability, freshness, and query", () => {
+    const rows = buildVendorMatrix(atlasDataset);
+    const result = filterVendorMatrix(rows, {
+      ...defaultAtlasState,
+      categoryId: "coding-agents",
+      availability: ["available"],
+    });
+
+    expect(result.length).toBeGreaterThan(0);
+    expect(result.every((row) => row.category.id === "coding-agents")).toBe(true);
+    expect(
+      result.every((row) =>
+        row.cells.some((cell) => cell.entry.availability === "available"),
+      ),
+    ).toBe(true);
   });
 
   it("prevents nested row changes from corrupting the source dataset", () => {

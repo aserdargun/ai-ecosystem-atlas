@@ -27,4 +27,5 @@ export const freshnessLabels: Record<Freshness, string> = {
 export const atlasViewLabels: Record<AtlasView, string> = {
   explorer: "Explorer",
   vendors: "Vendor comparison",
+  "all-vendors": "All vendors",
 };

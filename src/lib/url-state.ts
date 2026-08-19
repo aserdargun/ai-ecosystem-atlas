@@ -7,7 +7,7 @@ import {
 } from "@/data/schema";
 import { freshnessValues, type Freshness } from "@/lib/freshness";
 
-export type AtlasView = "explorer" | "vendors";
+export type AtlasView = "explorer" | "vendors" | "all-vendors";
 
 export type AtlasState = {
   query: string;
@@ -85,7 +85,11 @@ export function parseUrlState(
     availability: parseValues(searchParams.get("availability"), availabilityValues),
     statuses: parseValues(searchParams.get("status"), comparisonStatusValues),
     freshness: parseValues(searchParams.get("freshness"), freshnessValues),
-    view: searchParams.get("view") === "vendors" ? "vendors" : "explorer",
+    view:
+      searchParams.get("view") === "vendors" ||
+      searchParams.get("view") === "all-vendors"
+        ? (searchParams.get("view") as AtlasView)
+        : "explorer",
   };
 }
 

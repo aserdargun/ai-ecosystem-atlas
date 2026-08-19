@@ -286,6 +286,29 @@ it("switches the filtered dataset into the vendor comparison and round-trips the
   expect(replace).toHaveBeenLastCalledWith("/", { scroll: false });
 });
 
+it("switches to the all-vendors matrix and round-trips the URL", async () => {
+  const user = userEvent.setup();
+  renderConsole();
+
+  await user.click(screen.getByRole("button", { name: "All vendors" }));
+
+  expect(
+    screen.getByRole("table", { name: "All vendors capability matrix" }),
+  ).toBeVisible();
+  expect(screen.getByRole("columnheader", { name: /Anthropic/ })).toBeVisible();
+  expect(screen.getByRole("columnheader", { name: /OpenAI/ })).toBeVisible();
+  expect(screen.getByRole("columnheader", { name: /Z.ai/ })).toBeVisible();
+  expect(screen.getByRole("columnheader", { name: /minimax/ })).toBeVisible();
+  expect(screen.getByRole("columnheader", { name: /DeepSeek/ })).toBeVisible();
+  expect(screen.getByRole("columnheader", { name: /Qwen/ })).toBeVisible();
+  expect(replace).toHaveBeenLastCalledWith("/?view=all-vendors", {
+    scroll: false,
+  });
+
+  await user.click(screen.getByRole("button", { name: "Explorer" }));
+  expect(screen.getByRole("table", { name: /anthropic and openai/i })).toBeVisible();
+});
+
 it("summarizes only the rows matched by an active search in vendor view", async () => {
   const user = userEvent.setup();
   renderConsole();

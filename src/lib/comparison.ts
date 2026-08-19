@@ -6,6 +6,7 @@ import type {
   ComparisonAssessment,
   ComparisonStatus,
   Source,
+  Vendor,
   VendorEntry,
 } from "@/data/schema";
 import { availabilityValues, comparisonStatusValues } from "@/data/schema";
@@ -52,6 +53,19 @@ export type VendorSummary = Readonly<{
   availability: Record<Availability, number>;
   statuses: Record<ComparisonStatus, number>;
   categoryCounts: ReadonlyMap<string, number>;
+}>;
+
+export type VendorMatrixCell = Readonly<{
+  vendor: Immutable<Vendor>;
+  entry: ComparisonEntry;
+  sources: readonly Immutable<Source>[];
+}>;
+
+export type VendorMatrixRow = Readonly<{
+  category: Immutable<Category>;
+  capability: Immutable<Capability>;
+  cells: readonly VendorMatrixCell[];
+  searchText: string;
 }>;
 
 function entryKey(capabilityId: string, vendorId: string): string {
@@ -373,4 +387,101 @@ export function buildVendorSummary(
     statuses: Object.freeze(statuses),
     categoryCounts,
   });
+}
+function immutableVendor(vendor: Vendor): Immutable<Vendor> {
+  return Object.freeze({ ...vendor });
+}
+
+export function buildVendorMatrix(
+  dataset: AtlasDataset,
+): readonly VendorMatrixRow[] {
+  const categories = new Map(
+    dataset.categories.map((category) => [category.id, immutableCategory(category)]),
+  );
+  const entries = new Map(
+    dataset.vendorEntries.map((entry) => [entryKey(entry.capabilityId, entry.vendorId), entry]),
+  );
+  const sources = new Map(
+    dataset.sources.map((source) => [source.id, immutableSource(source)]),
+  );
+  const vendors = dataset.vendors.map(immutableVendor);
+
+  return Object.freeze(
+    dataset.capabilities.map((capability) => {
+      const category = categories.get(capability.categoryId);
+      if (!category) {
+        throw new Error(`Capability ${capability.id} has no category.`);
+      }
+
+      const cells = vendors.map((vendor) => {
+        const rawEntry = entries.get(entryKey(capability.id, vendor.id));
+        const entry = rawEntry
+          ? immutableEntry(rawEntry)
+          : undocumentedEntry(capability.id, vendor.id);
+        const cellSources = Object.freeze(
+          entry.sourceIds.flatMap((sourceId) => {
+            const source = sources.get(sourceId);
+            return source ? [source] : [];
+          }),
+        );
+
+        return Object.freeze({ vendor, entry, sources: cellSources });
+      });
+
+      const searchText = [
+        category.name,
+        category.shortName,
+        category.description,
+        capability.name,
+        capability.description,
+        ...capability.tags,
+        ...cells.flatMap((cell) => [
+          cell.entry.title,
+          cell.entry.summary,
+          ...cell.entry.details,
+          ...cell.entry.productNames,
+        ]),
+      ].join(" ");
+
+      return Object.freeze({
+        category,
+        capability: immutableCapability(capability),
+        cells: Object.freeze(cells),
+        searchText,
+      });
+    }),
+  );
+}
+
+export function filterVendorMatrix(
+  rows: readonly VendorMatrixRow[],
+  state: Pick<AtlasState, "query" | "categoryId" | "availability" | "freshness">,
+  now: Date = new Date(),
+): VendorMatrixRow[] {
+  const result: VendorMatrixRow[] = [];
+
+  for (const row of rows) {
+    if (state.categoryId !== null && row.category.id !== state.categoryId) continue;
+    if (
+      state.availability.length > 0 &&
+      !row.cells.some((cell) => state.availability.includes(cell.entry.availability))
+    ) {
+      continue;
+    }
+    if (
+      state.freshness.length > 0 &&
+      !row.cells.some(
+        (cell) =>
+          cell.entry.verifiedAt !== null &&
+          state.freshness.includes(classifyFreshness(cell.entry.verifiedAt, now)),
+      )
+    ) {
+      continue;
+    }
+    if (state.query && !matchesSearch(row.searchText, state.query)) continue;
+
+    result.push(row);
+  }
+
+  return result;
 }

@@ -12,8 +12,6 @@ export function SiteHeader() {
           </span>
         </a>
         <nav aria-label="Primary navigation">
-          <a href="#methodology">Methodology</a>
-          <a href="#sources">Sources</a>
           <a
             href="https://github.com/aserdargun/ai-ecosystem-atlas"
             target="_blank"

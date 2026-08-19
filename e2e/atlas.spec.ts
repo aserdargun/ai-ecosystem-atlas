@@ -136,11 +136,6 @@ test("desktop: preserves the accepted first-viewport table anatomy", async ({
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(tableSummary).toContainText("66 capabilities shown");
   await expect(tableSummary).toContainText("Evidence checked 11 Aug 2026");
-  await expect(
-    page.getByText(
-      "Next: methodology, freshness rules, and public update provenance",
-    ),
-  ).toBeVisible();
 });
 
 test("desktop: comparison table rules do not style unrelated semantic tables", async ({

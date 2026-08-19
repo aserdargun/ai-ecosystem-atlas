@@ -60,6 +60,15 @@ describe("URL state", () => {
     expect(serializeUrlState(defaultAtlasState).toString()).toBe("");
   });
 
+  it("parses and serializes the all-vendors view", () => {
+    expect(
+      parseUrlState(new URLSearchParams("view=all-vendors"), atlasDataset).view,
+    ).toBe("all-vendors");
+    expect(
+      serializeUrlState({ ...defaultAtlasState, view: "all-vendors" }).toString(),
+    ).toBe("view=all-vendors");
+  });
+
   it("round-trips a third-vendor pair by serializing both vendor keys", () => {
     const datasetWithGoogle = {
       ...atlasDataset,
