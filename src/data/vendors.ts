@@ -51,4 +51,14 @@ export const vendors = [
     homepageUrl: "https://www.deepseek.com/",
     accent: "#4d6bfe",
   },
+  {
+    id: "qwen",
+    name: "Qwen",
+    shortName: "Qwen",
+    ecosystemName: "Qwen ecosystem",
+    description:
+      "Qwen's models, Qwen Studio chat app, Qwen Code coding agent, QwenCloud developer platform, and organizational offerings.",
+    homepageUrl: "https://qwen.ai/",
+    accent: "#615ced",
+  },
 ] satisfies Vendor[];
