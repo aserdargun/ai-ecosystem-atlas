@@ -1,6 +1,7 @@
 import type { Plan } from "@/data/schema";
 
 const verifiedAt = "2026-08-11";
+const zaiVerifiedAt = "2026-08-19";
 
 export const plans = [
   {
@@ -132,5 +133,74 @@ export const plans = [
     highlights: ["Centralized admin controls", "Enterprise privacy and security", "Advanced ChatGPT capabilities"],
     sourceIds: ["openai-chatgpt-pricing", "openai-enterprise"],
     verifiedAt,
+  },
+  {
+    id: "glm-coding-lite",
+    vendorId: "zai",
+    name: "GLM Coding Plan Lite",
+    audience: "Individuals with light coding-agent usage",
+    priceDisplay: "$18/month",
+    billingNote: "Quarterly billing saves 20% and annual billing saves 30%; Z.ai lists promotional prices below the monthly rate.",
+    highlights: [
+      "10,000 weekly credits with 2,000 credits per 5 hours",
+      "Access to GLM-5.3, GLM-5-Turbo, and GLM-4.7",
+      "Works with ZCode, Claude Code, Cline, OpenCode, and other supported coding tools",
+    ],
+    sourceIds: ["zai-subscribe", "zai-devpack", "zai-zcode"],
+    verifiedAt: zaiVerifiedAt,
+  },
+  {
+    id: "glm-coding-pro",
+    vendorId: "zai",
+    name: "GLM Coding Plan Pro",
+    audience: "Individuals with regular coding-agent usage",
+    priceDisplay: "$80/month",
+    billingNote: "Six times Lite usage; discounted billing periods reduce the effective monthly price.",
+    highlights: [
+      "60,000 weekly credits with 12,000 credits per 5 hours",
+      "Curated MCP tools in addition to the bundled MCP servers",
+    ],
+    sourceIds: ["zai-subscribe", "zai-devpack", "zai-zcode"],
+    verifiedAt: zaiVerifiedAt,
+  },
+  {
+    id: "glm-coding-max",
+    vendorId: "zai",
+    name: "GLM Coding Plan Max",
+    audience: "High-intensity individual coding-agent users",
+    priceDisplay: "$168/month",
+    billingNote: "Fourteen times Lite usage; discounted billing periods reduce the effective monthly price.",
+    highlights: ["140,000 weekly credits with 28,000 credits per 5 hours"],
+    sourceIds: ["zai-subscribe", "zai-devpack", "zai-zcode"],
+    verifiedAt: zaiVerifiedAt,
+  },
+  {
+    id: "glm-team-standard",
+    vendorId: "zai",
+    name: "GLM Coding Team Plan Standard Seat",
+    audience: "Teams of two or more developers",
+    priceDisplay: "Seat-based subscription",
+    billingNote: "Z.ai publishes per-seat quotas rather than a universal seat price; on-demand overage is billed at a discount from model API list prices.",
+    highlights: [
+      "15,000 credits per 5 hours and 66,000 weekly credits per seat",
+      "Centralized seats, roles, permissions, and usage dashboards",
+      "Code, prompts, and conversations are not used for model training by default",
+    ],
+    sourceIds: ["zai-devpack-team"],
+    verifiedAt: zaiVerifiedAt,
+  },
+  {
+    id: "glm-team-premium",
+    vendorId: "zai",
+    name: "GLM Coding Team Plan Premium Seat",
+    audience: "Teams needing higher quotas and early model access",
+    priceDisplay: "Seat-based subscription",
+    billingNote: "Premium seats cannot be mixed with standard seats; pricing follows the published seat-based subscription model.",
+    highlights: [
+      "35,000 credits per 5 hours and 155,000 weekly credits per seat",
+      "Early access to flagship models and priority resource allocation",
+    ],
+    sourceIds: ["zai-devpack-team"],
+    verifiedAt: zaiVerifiedAt,
   },
 ] satisfies Plan[];

@@ -21,4 +21,14 @@ export const vendors = [
     homepageUrl: "https://openai.com/",
     accent: "#168c6b",
   },
+  {
+    id: "zai",
+    name: "Z.ai",
+    shortName: "GLM",
+    ecosystemName: "GLM ecosystem",
+    description:
+      "Z.ai's GLM models, Z.ai chat, ZCode coding agent, developer platform, and organizational offerings.",
+    homepageUrl: "https://z.ai/",
+    accent: "#3a66c4",
+  },
 ] satisfies Vendor[];

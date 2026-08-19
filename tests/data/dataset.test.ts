@@ -102,13 +102,23 @@ const officialSourceHosts = new Set([
   "help.openai.com",
   "openai.com",
   "chatgpt.com",
+  "z.ai",
+  "chat.z.ai",
+  "docs.z.ai",
+  "zcode.z.ai",
 ]);
 
+const expectedVendorIds = ["anthropic", "openai", "zai"] as const;
+const expectedVendorPairs = [
+  ["anthropic", "openai"],
+  ["anthropic", "zai"],
+  ["openai", "zai"],
+] as const;
+
 describe("canonical Atlas dataset", () => {
-  it("ships the complete two-vendor seed with evidence for every comparison", () => {
+  it("ships the complete three-vendor seed with evidence for every comparison", () => {
     expect(atlasDataset.vendors.map(({ id }) => id)).toEqual([
-      "anthropic",
-      "openai",
+      ...expectedVendorIds,
     ]);
     expect(atlasDataset.categories.map(({ id }) => id)).toEqual(
       expectedCategoryIds,
@@ -120,9 +130,9 @@ describe("canonical Atlas dataset", () => {
     expect(
       new Set(atlasDataset.capabilities.map((item) => item.categoryId)).size,
     ).toBe(17);
-    expect(atlasDataset.vendorEntries).toHaveLength(132);
-    expect(atlasDataset.assessments).toHaveLength(66);
-    expect(atlasDataset.sources.length).toBeGreaterThanOrEqual(24);
+    expect(atlasDataset.vendorEntries).toHaveLength(198);
+    expect(atlasDataset.assessments).toHaveLength(198);
+    expect(atlasDataset.sources.length).toBeGreaterThanOrEqual(90);
 
     for (const categoryId of expectedCategoryIds) {
       expect(
@@ -140,13 +150,20 @@ describe("canonical Atlas dataset", () => {
       expect(
         entries.map(({ vendorId }) => vendorId).sort(),
         `vendor entries for ${capability.id}`,
-      ).toEqual(["anthropic", "openai"]);
+      ).toEqual([...expectedVendorIds]);
 
       const assessments = atlasDataset.assessments.filter(
         (assessment) => assessment.capabilityId === capability.id,
       );
-      expect(assessments, `assessment for ${capability.id}`).toHaveLength(1);
-      expect(assessments[0].vendorIds).toEqual(["anthropic", "openai"]);
+      expect(assessments, `assessment for ${capability.id}`).toHaveLength(3);
+      expect(
+        assessments.map(({ vendorIds }) => [...vendorIds].sort().join("+")).sort(),
+        `assessment pairs for ${capability.id}`,
+      ).toEqual(
+        expectedVendorPairs.map(([left, right]) =>
+          [left, right].sort().join("+"),
+        ).sort(),
+      );
     }
 
     expect(
@@ -162,19 +179,38 @@ describe("canonical Atlas dataset", () => {
     expect(
       atlasDataset.vendorEntries.every((entry) => entry.sourceIds.length > 0),
     ).toBe(true);
+    for (const vendorId of expectedVendorIds) {
+      const expectedVerifiedAt =
+        vendorId === "zai" ? "2026-08-19" : "2026-08-11";
+      expect(
+        atlasDataset.vendorEntries
+          .filter((entry) => entry.vendorId === vendorId)
+          .every((entry) => entry.verifiedAt === expectedVerifiedAt),
+        `verification date for ${vendorId} entries`,
+      ).toBe(true);
+    }
     expect(
-      atlasDataset.vendorEntries.every(
-        (entry) => entry.verifiedAt === "2026-08-11",
-      ),
+      atlasDataset.models
+        .filter((model) => model.vendorId !== "zai")
+        .every((model) => model.verifiedAt === "2026-08-11"),
     ).toBe(true);
     expect(
-      atlasDataset.models.every((model) => model.verifiedAt === "2026-08-11"),
+      atlasDataset.models
+        .filter((model) => model.vendorId === "zai")
+        .every((model) => model.verifiedAt === "2026-08-19"),
     ).toBe(true);
     expect(
-      atlasDataset.plans.every((plan) => plan.verifiedAt === "2026-08-11"),
+      atlasDataset.plans
+        .filter((plan) => plan.vendorId !== "zai")
+        .every((plan) => plan.verifiedAt === "2026-08-11"),
+    ).toBe(true);
+    expect(
+      atlasDataset.plans
+        .filter((plan) => plan.vendorId === "zai")
+        .every((plan) => plan.verifiedAt === "2026-08-19"),
     ).toBe(true);
 
-    for (const vendorId of ["anthropic", "openai"]) {
+    for (const vendorId of expectedVendorIds) {
       expect(
         atlasDataset.models.some((model) => model.vendorId === vendorId),
         `model coverage for ${vendorId}`,
@@ -216,11 +252,27 @@ describe("canonical Atlas dataset", () => {
         ],
         vendorEntries: [...atlasDataset.vendorEntries, googleEntry],
       },
-      new Date("2026-08-11T12:00:00Z"),
+      new Date("2026-08-19T12:00:00Z"),
     );
 
     expect(extended.vendorEntries.at(-1)).toEqual(googleEntry);
-    expect(extended.vendorEntries).toHaveLength(133);
+    expect(extended.vendorEntries).toHaveLength(199);
+  });
+
+  it("publishes the verified GLM-5.3 token rates and coding-plan quotas", () => {
+    const glm53 = atlasDataset.models.find(({ id }) => id === "glm-5-3");
+    const glm5 = atlasDataset.models.find(({ id }) => id === "glm-5");
+    const lite = atlasDataset.plans.find(({ id }) => id === "glm-coding-lite");
+
+    expect(glm53?.pricing).toEqual({
+      inputPerMillionUsd: 1.4,
+      cachedInputPerMillionUsd: 0.26,
+      outputPerMillionUsd: 4.4,
+    });
+    expect(glm53?.contextWindowTokens).toBe(1_000_000);
+    expect(glm5?.contextWindowTokens).toBe(200_000);
+    expect(lite?.priceDisplay).toBe("$18/month");
+    expect(lite?.highlights).toContain("10,000 weekly credits with 2,000 credits per 5 hours");
   });
 
   it("publishes the verified GPT-5.6 Terra and Luna token rates", () => {
