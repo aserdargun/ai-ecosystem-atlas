@@ -4,7 +4,7 @@
 ![TypeScript 5.9.3](https://img.shields.io/badge/TypeScript-5.9.3-3178C6?logo=typescript&logoColor=white)
 ![Checks: npm run check](https://img.shields.io/badge/checks-npm%20run%20check-168c6b)
 
-AI Ecosystem Atlas is a public, evidence-backed research console for comparing AI product and developer ecosystems. The first release examines Anthropic/Claude, OpenAI/ChatGPT, and Z.ai/GLM across models, end-user products, coding agents, developer platforms, governance, and pricing.
+AI Ecosystem Atlas is a public, evidence-backed research console for comparing AI product and developer ecosystems. The first release examines Anthropic/Claude, OpenAI/ChatGPT, Z.ai/GLM, minimax/Mavis, and DeepSeek across models, end-user products, coding agents, developer platforms, governance, and pricing.
 
 The atlas is designed for inspection, not verdicts. It keeps provider-neutral capabilities, vendor claims, pair-specific assessments, models, plans, and official sources in separate canonical records. The interface does not calculate an aggregate score, rank vendors, or declare a winner.
 
@@ -191,7 +191,7 @@ PLAYWRIGHT_BASE_URL=https://brave-stone-05e2d3603.7.azurestaticapps.net npm run 
 Every change follows the same public, reviewable workflow:
 
 1. Identify the capability, model, plan, or source record that changed.
-2. Consult a current official Anthropic or OpenAI page.
+2. Consult a current official Anthropic, OpenAI, Z.ai, minimax, or DeepSeek page.
 3. Update or add the source record before referencing it.
 4. Update the canonical fact and set `verifiedAt` to the official-source check date.
 5. Add or update tests when schema or selector behavior changes.
@@ -221,13 +221,13 @@ Add to [`src/data/capabilities.ts`](src/data/capabilities.ts) only when the vend
 
 ## Source methodology
 
-V0.1 uses official first-party Anthropic, OpenAI, and Z.ai documentation, help pages, product pages, pricing pages, and announcements. A source record identifies its publisher, URL, and source type; claims refer to source IDs so one official page can support multiple records without duplicating URLs. Evidence-bearing records expose their source links and verification dates in the interface.
+V0.1 uses official first-party Anthropic, OpenAI, Z.ai, minimax, and DeepSeek documentation, help pages, product pages, pricing pages, and announcements. A source record identifies its publisher, URL, and source type; claims refer to source IDs so one official page can support multiple records without duplicating URLs. Evidence-bearing records expose their source links and verification dates in the interface.
 
 Important limitations:
 
 - Vendor documentation is first-party evidence, not independent performance evaluation.
 - The atlas records documented product scope and positioning; it does not benchmark quality, reliability, latency, safety, or real-world outcomes.
-- The seed covers Anthropic, OpenAI, and Z.ai. Architecture for more vendors is not the same as completed research for those vendors.
+- The seed covers Anthropic, OpenAI, Z.ai, minimax, and DeepSeek. Architecture for more vendors is not the same as completed research for those vendors.
 - Research is maintained manually. There is no unattended scraper, automatic fact update, or ordinary-build network check, so an official page can change or disappear after verification.
 - `verifiedAt` records an evidence check, not a release or announcement date; older records should be rechecked before time-sensitive decisions.
 - `not-documented` means the reviewed official material did not establish a capability. It does not prove that the capability is technically impossible or commercially unavailable.

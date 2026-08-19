@@ -109,13 +109,21 @@ const officialSourceHosts = new Set([
   "minimax.com",
   "platform.minimax.com",
   "docs.minimax.com",
+  "api-docs.deepseek.com",
+  "deepseek.com",
+  "www.deepseek.com",
+  "deepseekdocs.com",
 ]);
 
-const expectedVendorIds = ["anthropic", "openai", "zai", "minimax"] as const;
+const expectedVendorIds = ["anthropic", "openai", "zai", "minimax", "deepseek"] as const;
 const expectedVendorPairs = [
   ["anthropic", "minimax"],
   ["anthropic", "openai"],
   ["anthropic", "zai"],
+  ["deepseek", "anthropic"],
+  ["deepseek", "minimax"],
+  ["deepseek", "openai"],
+  ["deepseek", "zai"],
   ["minimax", "openai"],
   ["minimax", "zai"],
   ["openai", "zai"],
@@ -125,7 +133,7 @@ const expectedPairKeys = expectedVendorPairs
   .sort();
 
 describe("canonical Atlas dataset", () => {
-  it("ships the complete four-vendor seed with evidence for every comparison", () => {
+  it("ships the complete five-vendor seed with evidence for every comparison", () => {
     expect(atlasDataset.vendors.map(({ id }) => id)).toEqual([
       ...expectedVendorIds,
     ]);
@@ -139,9 +147,9 @@ describe("canonical Atlas dataset", () => {
     expect(
       new Set(atlasDataset.capabilities.map((item) => item.categoryId)).size,
     ).toBe(17);
-    expect(atlasDataset.vendorEntries).toHaveLength(264);
-    expect(atlasDataset.assessments).toHaveLength(396);
-    expect(atlasDataset.sources.length).toBeGreaterThanOrEqual(90);
+    expect(atlasDataset.vendorEntries).toHaveLength(330);
+    expect(atlasDataset.assessments).toHaveLength(660);
+    expect(atlasDataset.sources.length).toBeGreaterThanOrEqual(100);
 
     for (const categoryId of expectedCategoryIds) {
       expect(
@@ -164,7 +172,7 @@ describe("canonical Atlas dataset", () => {
       const assessments = atlasDataset.assessments.filter(
         (assessment) => assessment.capabilityId === capability.id,
       );
-      expect(assessments, `assessments for ${capability.id}`).toHaveLength(6);
+      expect(assessments, `assessments for ${capability.id}`).toHaveLength(10);
       expect(
         assessments
           .map(({ vendorIds }) => [...vendorIds].sort().join("+"))
@@ -188,7 +196,7 @@ describe("canonical Atlas dataset", () => {
     ).toBe(true);
     for (const vendorId of expectedVendorIds) {
       const expectedVerifiedAt =
-        vendorId === "zai" ? "2026-08-19" : "2026-08-11";
+        vendorId === "zai" || vendorId === "deepseek" ? "2026-08-19" : "2026-08-11";
       expect(
         atlasDataset.vendorEntries
           .filter((entry) => entry.vendorId === vendorId)
@@ -198,22 +206,22 @@ describe("canonical Atlas dataset", () => {
     }
     expect(
       atlasDataset.models
-        .filter((model) => model.vendorId !== "zai")
+        .filter((model) => model.vendorId !== "zai" && model.vendorId !== "deepseek")
         .every((model) => model.verifiedAt === "2026-08-11"),
     ).toBe(true);
     expect(
       atlasDataset.models
-        .filter((model) => model.vendorId === "zai")
+        .filter((model) => model.vendorId === "zai" || model.vendorId === "deepseek")
         .every((model) => model.verifiedAt === "2026-08-19"),
     ).toBe(true);
     expect(
       atlasDataset.plans
-        .filter((plan) => plan.vendorId !== "zai")
+        .filter((plan) => plan.vendorId !== "zai" && plan.vendorId !== "deepseek")
         .every((plan) => plan.verifiedAt === "2026-08-11"),
     ).toBe(true);
     expect(
       atlasDataset.plans
-        .filter((plan) => plan.vendorId === "zai")
+        .filter((plan) => plan.vendorId === "zai" || plan.vendorId === "deepseek")
         .every((plan) => plan.verifiedAt === "2026-08-19"),
     ).toBe(true);
 
@@ -229,13 +237,13 @@ describe("canonical Atlas dataset", () => {
     }
   });
 
-  it("accepts a fifth-vendor fact through the same normalized entry contract", () => {
+  it("accepts a sixth-vendor fact through the same normalized entry contract", () => {
     const googleEntry = defineVendorEntry({
       id: "google-frontier-model-lineup",
       capabilityId: "frontier-model-lineup",
       vendorId: "google",
       title: "Current Gemini models",
-      summary: "A normalized fifth-vendor entry used to exercise the authoring contract.",
+      summary: "A normalized sixth-vendor entry used to exercise the authoring contract.",
       details: [],
       productNames: ["Gemini"],
       availability: "available",
@@ -252,7 +260,7 @@ describe("canonical Atlas dataset", () => {
             name: "Google",
             shortName: "Gemini",
             ecosystemName: "Gemini ecosystem",
-            description: "A fifth ecosystem fixture.",
+            description: "A sixth ecosystem fixture.",
             homepageUrl: "https://www.google.com/",
             accent: "#4285f4",
           },
@@ -263,7 +271,7 @@ describe("canonical Atlas dataset", () => {
     );
 
     expect(extended.vendorEntries.at(-1)).toEqual(googleEntry);
-    expect(extended.vendorEntries).toHaveLength(265);
+    expect(extended.vendorEntries).toHaveLength(331);
   });
 
   it("publishes the verified GPT-5.6 Terra and Luna token rates", () => {
@@ -323,6 +331,24 @@ describe("canonical Atlas dataset", () => {
     expect([...max5x!.highlights, ...max20x!.highlights].join(" ")).not.toMatch(
       /capacity/i,
     );
+  });
+
+  it("publishes the verified DeepSeek-V4 token rates", () => {
+    const pro = atlasDataset.models.find(({ id }) => id === "deepseek-v4-pro");
+    const flash = atlasDataset.models.find(({ id }) => id === "deepseek-v4-flash");
+
+    expect(pro?.pricing).toEqual({
+      inputPerMillionUsd: 0.66,
+      cachedInputPerMillionUsd: 0.022,
+      outputPerMillionUsd: 1.98,
+    });
+    expect(pro?.contextWindowTokens).toBe(1_000_000);
+    expect(pro?.maxOutputTokens).toBe(384_000);
+    expect(flash?.pricing).toEqual({
+      inputPerMillionUsd: 0.22,
+      cachedInputPerMillionUsd: 0.007,
+      outputPerMillionUsd: 0.66,
+    });
   });
 
   it("describes minimax Max with source-supported usage multiples", () => {

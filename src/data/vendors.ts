@@ -41,4 +41,14 @@ export const vendors = [
     homepageUrl: "https://minimax.com/",
     accent: "#5b5fc7",
   },
+  {
+    id: "deepseek",
+    name: "DeepSeek",
+    shortName: "DeepSeek",
+    ecosystemName: "DeepSeek ecosystem",
+    description:
+      "DeepSeek's open-weight models, free chat app, developer API, and agent harness.",
+    homepageUrl: "https://www.deepseek.com/",
+    accent: "#4d6bfe",
+  },
 ] satisfies Vendor[];
