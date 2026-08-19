@@ -250,6 +250,7 @@ export function ResearchConsole({ dataset }: { dataset: AtlasDataset }) {
           resultCount={resultCount}
           isFiltered={isFiltered}
           isPending={isPending || query !== deferredQuery}
+          view={view}
           onQueryChange={handleQueryChange}
           onVendorChange={handleVendorChange}
           onSwapVendors={swapVendors}

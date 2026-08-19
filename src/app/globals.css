@@ -288,6 +288,10 @@ a {
   padding: 0;
 }
 
+.filter-toolbar--no-vendors {
+  grid-template-columns: minmax(260px, 1fr) auto;
+}
+
 .filter-toolbar label > span,
 .filter-kicker {
   display: block;
@@ -1311,6 +1315,10 @@ a {
 
   .filter-toolbar {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .filter-toolbar--no-vendors {
+    grid-template-columns: 1fr auto;
   }
 
   .console-toolbar {

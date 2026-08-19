@@ -295,6 +295,15 @@ it("switches to the all-vendors matrix and round-trips the URL", async () => {
   expect(
     screen.getByRole("table", { name: "All vendors capability matrix" }),
   ).toBeVisible();
+  expect(
+    screen.queryByRole("combobox", { name: /left vendor/i }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("combobox", { name: /right vendor/i }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: "Swap vendors" }),
+  ).not.toBeInTheDocument();
   expect(screen.getByRole("columnheader", { name: /Anthropic/ })).toBeVisible();
   expect(screen.getByRole("columnheader", { name: /OpenAI/ })).toBeVisible();
   expect(screen.getByRole("columnheader", { name: /Z.ai/ })).toBeVisible();

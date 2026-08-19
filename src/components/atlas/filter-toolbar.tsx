@@ -11,6 +11,7 @@ import {
   comparisonStatusLabels,
   freshnessLabels,
 } from "@/lib/labels";
+import type { AtlasView } from "@/lib/url-state";
 
 type PrimaryToolbarProps = {
   query: string;
@@ -20,6 +21,7 @@ type PrimaryToolbarProps = {
   resultCount: number;
   isFiltered: boolean;
   isPending: boolean;
+  view: AtlasView;
   onQueryChange: (query: string) => void;
   onVendorChange: (side: "left" | "right", vendorId: string) => void;
   onSwapVendors: () => void;
@@ -34,6 +36,7 @@ export function FilterToolbar({
   resultCount,
   isFiltered,
   isPending,
+  view,
   onQueryChange,
   onVendorChange,
   onSwapVendors,
@@ -41,9 +44,16 @@ export function FilterToolbar({
 }: PrimaryToolbarProps) {
   const leftVendor = vendors.find(({ id }) => id === leftVendorId);
   const rightVendor = vendors.find(({ id }) => id === rightVendorId);
+  const showVendorControls = view !== "all-vendors";
 
   return (
-    <div className="filter-toolbar" id="filter-toolbar" aria-busy={isPending}>
+    <div
+      className={
+        showVendorControls ? "filter-toolbar" : "filter-toolbar filter-toolbar--no-vendors"
+      }
+      id="filter-toolbar"
+      aria-busy={isPending}
+    >
       <label className="search-control">
         <span>Search capabilities</span>
         <input
@@ -53,9 +63,10 @@ export function FilterToolbar({
           onChange={(event) => onQueryChange(event.currentTarget.value)}
         />
       </label>
-      <div className="vendor-controls" aria-label="Compared vendors">
-        <label>
-          <span>Left vendor</span>
+      {showVendorControls ? (
+        <div className="vendor-controls" aria-label="Compared vendors">
+          <label>
+            <span>Left vendor</span>
           <select
             value={leftVendorId}
             style={{ "--vendor-color": leftVendor?.accent } as CSSProperties}
@@ -95,7 +106,8 @@ export function FilterToolbar({
               ))}
           </select>
         </label>
-      </div>
+        </div>
+      ) : null}
       <div className="result-actions">
         <p className="result-count" role="status" aria-live="polite">
           {resultCount} {resultCount === 1 ? "capability" : "capabilities"} shown
