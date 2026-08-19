@@ -66,7 +66,34 @@ export type VendorMatrixRow = Readonly<{
   capability: Immutable<Capability>;
   cells: readonly VendorMatrixCell[];
   searchText: string;
+  score: number;
 }>;
+
+const availabilityScore: Record<Availability, number> = {
+  available: 1,
+  limited: 0.5,
+  "not-available": 0,
+  "not-documented": 0,
+  unknown: 0,
+};
+
+export function buildVendorMatrixScore(
+  cells: readonly VendorMatrixCell[],
+): number {
+  if (cells.length === 0) return 0;
+  const total = cells.reduce(
+    (sum, cell) => sum + availabilityScore[cell.entry.availability],
+    0,
+  );
+  return total / cells.length;
+}
+
+export function buildMatrixOverallScore(
+  rows: readonly VendorMatrixRow[],
+): number {
+  if (rows.length === 0) return 0;
+  return rows.reduce((sum, row) => sum + row.score, 0) / rows.length;
+}
 
 function entryKey(capabilityId: string, vendorId: string): string {
   return `${capabilityId}:${vendorId}`;
@@ -448,6 +475,7 @@ export function buildVendorMatrix(
         capability: immutableCapability(capability),
         cells: Object.freeze(cells),
         searchText,
+        score: buildVendorMatrixScore(cells),
       });
     }),
   );

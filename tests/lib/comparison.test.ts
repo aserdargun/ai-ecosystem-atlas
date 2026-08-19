@@ -2,6 +2,7 @@ import { atlasDataset } from "@/data";
 import {
   buildCategoryCounts,
   buildComparisonRows,
+  buildMatrixOverallScore,
   buildVendorMatrix,
   buildVendorSummary,
   filterComparisonRows,
@@ -147,6 +148,35 @@ describe("comparison selectors", () => {
         row.cells.some((cell) => cell.entry.availability === "available"),
       ),
     ).toBe(true);
+  });
+
+  it("scores each capability by availability coverage across vendors", () => {
+    const rows = buildVendorMatrix(atlasDataset);
+
+    for (const row of rows) {
+      expect(row.score).toBeGreaterThanOrEqual(0);
+      expect(row.score).toBeLessThanOrEqual(1);
+    }
+
+    const allAvailable = {
+      ...atlasDataset,
+      vendorEntries: atlasDataset.vendorEntries.map((entry) => ({
+        ...entry,
+        availability: "available" as const,
+      })),
+    };
+    expect(buildVendorMatrix(allAvailable)[0].score).toBe(1);
+  });
+
+  it("averages per-capability scores into an overall coverage score", () => {
+    const rows = buildVendorMatrix(atlasDataset);
+    const overall = buildMatrixOverallScore(rows);
+    const manualAverage =
+      rows.reduce((sum, row) => sum + row.score, 0) / rows.length;
+
+    expect(overall).toBeCloseTo(manualAverage);
+    expect(overall).toBeGreaterThanOrEqual(0);
+    expect(overall).toBeLessThanOrEqual(1);
   });
 
   it("prevents nested row changes from corrupting the source dataset", () => {

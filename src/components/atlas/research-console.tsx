@@ -31,7 +31,17 @@ import {
   filterVendorMatrix,
 } from "@/lib/comparison";
 import type { Freshness } from "@/lib/freshness";
-import { atlasViewLabels } from "@/lib/labels";
+import {
+  downloadFile,
+  toCsv,
+  toExcelXml,
+  type ExportTable,
+} from "@/lib/export";
+import {
+  atlasViewLabels,
+  availabilityLabels,
+  comparisonStatusLabels,
+} from "@/lib/labels";
 import {
   defaultAtlasState,
   parseUrlState,
@@ -239,6 +249,61 @@ export function ResearchConsole({ dataset }: { dataset: AtlasDataset }) {
 
   const resultCount = view === "all-vendors" ? matrixRows.length : visibleRows.length;
 
+  const exportTable: ExportTable =
+    view === "all-vendors"
+      ? {
+          headers: [
+            "Category",
+            "Capability",
+            ...dataset.vendors.map((vendor) => vendor.name),
+            "Coverage",
+          ],
+          rows: matrixRows.map((row) => [
+            row.category.name,
+            row.capability.name,
+            ...row.cells.map((cell) => availabilityLabels[cell.entry.availability]),
+            Math.round(row.score * 100) + "%",
+          ]),
+        }
+      : {
+          headers: [
+            "Category",
+            "Capability",
+            leftVendor.name + " availability",
+            leftVendor.name,
+            rightVendor.name + " availability",
+            rightVendor.name,
+            "Assessment",
+            "Verified",
+          ],
+          rows: visibleRows.map((row) => [
+            row.category.name,
+            row.capability.name,
+            availabilityLabels[row.leftEntry.availability],
+            row.leftEntry.title,
+            availabilityLabels[row.rightEntry.availability],
+            row.rightEntry.title,
+            comparisonStatusLabels[row.assessment.status],
+            row.leftEntry.verifiedAt ?? row.rightEntry.verifiedAt ?? "",
+          ]),
+        };
+
+  function handleExportCsv() {
+    downloadFile(
+      "ai-ecosystem-atlas-" + view + ".csv",
+      toCsv(exportTable),
+      "text/csv;charset=utf-8",
+    );
+  }
+
+  function handleExportExcel() {
+    downloadFile(
+      "ai-ecosystem-atlas-" + view + ".xls",
+      toExcelXml(exportTable),
+      "application/vnd.ms-excel",
+    );
+  }
+
   return (
     <section className="research-console" aria-label="Research Console">
       <div className="console-toolbar">
@@ -256,19 +321,29 @@ export function ResearchConsole({ dataset }: { dataset: AtlasDataset }) {
           onSwapVendors={swapVendors}
           onReset={resetFilters}
         />
-        <div className="view-toggle" role="group" aria-label="Comparison view">
-          {(["explorer", "vendors", "all-vendors"] as const).map((viewValue) => (
-            <button
-              type="button"
-              aria-pressed={view === viewValue}
-              key={viewValue}
-              onClick={() =>
-                applyFilter((current) => ({ ...current, view: viewValue }))
-              }
-            >
-              {atlasViewLabels[viewValue]}
+        <div className="console-toolbar__side">
+          <div className="view-toggle" role="group" aria-label="Comparison view">
+            {(["explorer", "vendors", "all-vendors"] as const).map((viewValue) => (
+              <button
+                type="button"
+                aria-pressed={view === viewValue}
+                key={viewValue}
+                onClick={() =>
+                  applyFilter((current) => ({ ...current, view: viewValue }))
+                }
+              >
+                {atlasViewLabels[viewValue]}
+              </button>
+            ))}
+          </div>
+          <div className="export-controls" role="group" aria-label="Export results">
+            <button type="button" onClick={handleExportCsv}>
+              Export CSV
             </button>
-          ))}
+            <button type="button" onClick={handleExportExcel}>
+              Export Excel
+            </button>
+          </div>
         </div>
       </div>
       <div className="console-body">
